@@ -1,7 +1,9 @@
 // ==UserScript==
 // @name         Bilibili Download Pictures
+// @name:zh-CN   下载Bilibili动态页面图片
 // @version      0.2
 // @description  Download pictures from bilibili timeline
+// @description:zh-CN 下载“Bilibili动态”时间线页面的图片
 // @author       OWENDSWANG
 // @match        https://t.bilibili.com/*
 // @grant        GM_download
