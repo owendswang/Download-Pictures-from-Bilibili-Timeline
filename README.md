@@ -5,7 +5,7 @@ A Tampermonkey script to download pictures from Bilibili timeline.
 Go to [Release Page](releases)
 
 ## Platform:
-(Only listed those version I tested. You could try on other platforms by yourself.)
+(Only listed those versions I tested. You could try it on other platforms by yourself.)
 - **Tampermonkey** (tested on v4.11.6120)
 - Firefox (tested on v85.0.2 64-bit)
 - Windows 7 SP1(which I tested on)
