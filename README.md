@@ -1,6 +1,9 @@
 # Downlaod-Pictures-from-Bilibili-Timeline
 A Tampermonkey script to download pictures from Bilibili timeline.
 
+## Download:
+Go to [Release Page](releases)
+
 ## Platform:
 (Only listed those version I tested. You could try on other platforms by yourself.)
 - **Tampermonkey** (tested on v4.11.6120)
