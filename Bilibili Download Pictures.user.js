@@ -59,7 +59,11 @@
                                 icon.style.marginTop = '-2px';
                                 var text = document.createElement('span');
                                 text.classList.add('text-offset');
-                                text.textContent = '下载';
+                                if (navigator.language == 'zh-CN') {
+                                    text.textContent = '下载';
+                                } else {
+                                    text.textContent = 'Download';
+                                }
                                 span.appendChild(icon);
                                 span.appendChild(text);
                                 downloadButton.appendChild(span);
