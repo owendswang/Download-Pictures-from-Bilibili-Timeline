@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Bilibili Download Pictures
-// @version      0.1
-// @description  Download pictures from bilibili
+// @version      0.2
+// @description  Download pictures from bilibili timeline
 // @author       OWENDSWANG
 // @match        https://t.bilibili.com/*
 // @grant        GM_download
