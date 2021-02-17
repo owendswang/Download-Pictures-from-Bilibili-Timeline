@@ -1,4 +1,4 @@
-中文介绍：[README.zh.md](README.zh.md)
+**中文介绍：[README.zh.md](README.zh.md)**
 
 # Downlaod Pictures from Bilibili Timeline
 A Tampermonkey script to download pictures from Bilibili timeline.
