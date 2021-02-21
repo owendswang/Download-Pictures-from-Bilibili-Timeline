@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Bilibili Download Pictures
 // @name:zh-CN   下载Bilibili动态页面图片
-// @version      0.3
+// @version      0.4
 // @description  Download pictures from bilibili timeline
 // @description:zh-CN 下载“Bilibili动态”时间线页面的图片
 // @author       OWENDSWANG
@@ -22,14 +22,16 @@
     // Your code here...
     var notLoaded = true;
     var cardsTotal = 0;
-    var startIndex = 0;
-    function mostViewedItemMouseOver(event) {
+    var skeletonsTotal = 0;
+    // var startIndex = 0;
+    function mostViewedItemMouseClick(event) {
         notLoaded = true;
         cardsTotal = 0;
-        startIndex = 0;
+        skeletonsTotal = 0;
+        // startIndex = 0;
     }
     function handleCard(card) {
-        if (card.getElementsByClassName('imagesbox').length > 0) {
+        if (card.getElementsByClassName('imagesbox').length > 0 && card.getElementsByClassName('download-button').length == 0) {
             // console.log('added download button');
             var buttonBar = card.getElementsByClassName('button-bar')[0];
             var buttons = buttonBar.getElementsByClassName('single-button');
@@ -112,36 +114,37 @@
             });
         }
     }
+    function feedMouseOver(event) {
+        var cards = this.querySelectorAll('div.card');
+        var skeletonCards = this.querySelectorAll('div.card > div.skeleton');
+        // console.log(cardsTotal);
+        // console.log(skeletonCards.length);
+        if (notLoaded || skeletonCards.length != skeletonsTotal) {
+            // console.log('cards');
+            cardsTotal = cards.length;
+            skeletonsTotal = skeletonCards.length;
+            for (var i = 0; i < cardsTotal; i++) {
+                // console.log('card');
+                handleCard(cards[i])
+                // startIndex += 1;
+            }
+            notLoaded = false;
+            document.body.removeEventListener('mouseover', bodyMouseOver);
+        }
+    }
     function bodyMouseOver(event) {
         if (notLoaded) {
-            console.log('body');
+            // console.log('body');
             // console.log(document.querySelectorAll('div.feed-card').length);
             var mostViewedItems = document.querySelectorAll('div.most-viewed-item');
             // console.log(mostViewedItems.length);
             for (var l = 0; l < mostViewedItems.length; l++) {
-                mostViewedItems[l].addEventListener('click', mostViewedItemMouseOver);
+                mostViewedItems[l].addEventListener('click', mostViewedItemMouseClick);
             }
             var feed = document.querySelector('div.feed-card');
             if (feed) {
                 // console.log('feed');
-                feed.addEventListener('mouseover', function(event) {
-                    var cards = feed.querySelectorAll('div.card');
-                    // console.log(cards.length);
-                    // console.log(cardsTotal);
-                    if (notLoaded || cards.length > cardsTotal) {
-                        // console.log('cards');
-                        cardsTotal = cards.length - feed.querySelectorAll('div.card > div.skeleton').length;
-                        // console.log(cardsTotal);
-                        for (var i = startIndex; i < cardsTotal; i++) {
-                            // console.log('card-bg-red');
-                            // cards[i].style.backgroundColor = 'red';
-                            handleCard(cards[i])
-                            startIndex += 1;
-                        }
-                        notLoaded = false;
-                        document.body.removeEventListener('mouseover', bodyMouseOver);
-                    }
-                });
+                feed.addEventListener('mouseover', feedMouseOver);
             } else {
                 var card = document.querySelector('div.card');
                 if (card) {
