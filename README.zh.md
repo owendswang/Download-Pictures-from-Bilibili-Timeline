@@ -11,7 +11,7 @@ English Version: [README.md](README.md)
 （仅列出了我测试并使用的平台版本。）
 - **Tampermonkey** (测试于v4.11.6120)
 - Firefox (测试于v85.0.2 64-bit)
-- Windows 7 SP1 (我测试用的版本)
+- Windows 7 SP1，Windows 10 20H2 (我测试用的版本)
 
 ## 使用方法:
 从[Greasy Fork](https://greasyfork.org/zh-CN/scripts/421885-bilibili-download-pictures)直接安装。
