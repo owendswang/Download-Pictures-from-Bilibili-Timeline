@@ -13,7 +13,7 @@ Or
 (Only listed those versions I tested. You could try it on other platforms by yourself.)
 - **Tampermonkey** (tested on v4.11.6120)
 - Firefox (tested on v85.0.2 64-bit)
-- Windows 7 SP1(which I tested on)
+- Windows 7 SP1, Windows 10 20H2 (which I tested on)
 
 ## Usage:
 Install from [Greasy Fork](https://greasyfork.org/zh-CN/scripts/421885-bilibili-download-pictures).
