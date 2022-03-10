@@ -13,6 +13,8 @@
 // @match        https://space.bilibili.com/*/dynamic
 // @grant        GM_download
 // @namespace https://greasyfork.org/users/738244
+// @require      https://cdn.staticfile.org/jszip/3.7.1/jszip.min.js
+// @require      https://cdn.staticfile.org/FileSaver.js/1.3.2/FileSaver.min.js
 // ==/UserScript==
 
 (function() {
@@ -81,28 +83,48 @@
                 // console.log('click');
                 var content = this.closest('div.main-content');
                 var list = content.querySelectorAll('div.img-content');
+
+                let zip = new JSZip();
+                let zipName = content.parentElement.attributes["data-did"].value
+
                 if (list.length > 0) {
                     for (var j = 0; j < list.length; j++) {
                         var imgUrl = list[j].style.backgroundImage.split(/"|@/)[1];
                         if (imgUrl.startsWith('//')) {
                             imgUrl = 'https:' + imgUrl;
                         }
-                        var imgName = imgUrl.split('/')[imgUrl.split('/').length - 1];
+                        // var imgName = imgUrl.split('/')[imgUrl.split('/').length - 1];
+                        var imgName = j+1+'_'+ imgUrl.split('/').splice(-1);
                         // console.log(imgUrl);
                         // console.log(imgName);
-                        GM_download(imgUrl, imgName);
+                        // GM_download(imgUrl, imgName);
+                        var imgData = downloadImage(imgUrl)
+                        zip.file(imgName, imgData)
                     }
+                    zip.generateAsync({type:"blob"}).then( content => {
+                        saveAs(content, zipName+".zip")
+                    })
                 } else {
                     list = content.querySelectorAll('li > img');
                     if (list.length > 0) {
+
+                        let zip = new JSZip();
+                        let zipName = window.location.pathname.substr(1);
+
                         for (var k = 0; k < list.length; k++) {
                             imgUrl = list[k].src.split('@')[0];
                             if (imgUrl.startsWith('//')) {
                                 imgUrl = 'https:' + imgUrl;
                             }
-                            imgName = imgUrl.split('/')[imgUrl.split('/').length - 1];
-                            GM_download(imgUrl, imgName);
+                            // imgName = imgUrl.split('/')[imgUrl.split('/').length - 1];
+                            imgName = k+1+'_'+imgUrl.split('/').splice(-1)
+                            // GM_download(imgUrl, imgName);
+                            let imgData = downloadImage(imgUrl);
+                            zip.file(imgName, imgData);
                         }
+                        zip.generateAsync({type:"blob"}).then( content => {
+                            saveAs(content, zipName+".zip");
+                        });
                     } else {
                         var singleImg = content.querySelector('div.boost-img-container > img');
                         imgUrl = singleImg.src.split('@')[0];
@@ -110,6 +132,7 @@
                         GM_download(imgUrl, imgName);
                     }
                 }
+                text.textContent += ' √';
             });
         }
     }
