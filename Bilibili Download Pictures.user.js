@@ -136,6 +136,15 @@
             });
         }
     }
+    async function downloadImage(url) {
+        let blob = new Blob()
+        await fetch(url)
+            .then(response => response.blob())
+            .then(data => {
+            blob = data
+        })
+        return blob
+    }
     function feedMouseOver(event) {
         var cards = this.querySelectorAll('div.card');
         var skeletonCards = this.querySelectorAll('div.card > div.skeleton');
