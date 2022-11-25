@@ -1,14 +1,14 @@
 // ==UserScript==
 // @name         Bilibili Download Pictures
 // @name:zh-CN   下载Bilibili动态页面图片
-// @version      0.6
+// @version      0.6.1
 // @description  Download pictures from bilibili timeline
 // @description:zh-CN 下载“Bilibili动态”时间线页面的图片
 // @author       OWENDSWANG
 // @icon         https://avatars.githubusercontent.com/u/9076865?s=40&v=4
 // @license      MIT
-// @homepage     https://greasyfork.org/zh-CN/scripts/421885-bilibili-download-pictures
-// @supportURL   https://github.com/owendswang/Downlaod-Pictures-from-Bilibili-Timeline
+// @homepage     https://greasyfork.org/scripts/421885
+// @supportURL   https://github.com/owendswang/Download-Pictures-from-Bilibili-Timeline
 // @match        https://t.bilibili.com/*
 // @match        https://space.bilibili.com/*/dynamic*
 // @grant        GM_download
