@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Bilibili Download Pictures
 // @name:zh-CN   下载Bilibili动态页面图片
-// @version      0.7.0
+// @version      0.7.1
 // @description  Download pictures from bilibili timeline
 // @description:zh-CN 下载“Bilibili动态”时间线页面的图片
 // @author       OWENDSWANG
@@ -92,15 +92,17 @@
                 // console.log('click');
                 event.preventDefault();
                 const content = this.closest('div.bili-dyn-item__main');
-                const list = content.querySelectorAll('div.bili-album__preview__picture__img');
+                const list = content.querySelectorAll('div.bili-album__preview__picture__img img');
+                // console.log(list);
                 if (list.length > 0) {
                     for (let j = 0; j < list.length; j++) {
-                        let imgUrl = list[j].style.backgroundImage.split(/"|@/)[1];
+                        // let imgUrl = list[j].style.backgroundImage.split(/"|@/)[1];
+                        let imgUrl = list[j].src.split(/@/)[0];
+                        console.log(imgUrl);
                         if (imgUrl.startsWith('//')) {
                             imgUrl = 'https:' + imgUrl;
                         }
                         const imgName = imgUrl.split('/')[imgUrl.split('/').length - 1];
-                        // console.log(imgUrl);
                         // console.log(imgName);
                         GM_download(imgUrl, imgName);
                     }
@@ -215,7 +217,7 @@
         if (notLoaded || skeletonCards.length != skeletonsTotal || cards.length > cardsTotal) {
             // console.log('cards');
             cardsTotal = cards.length;
-            console.log(cardsTotal);
+            // console.log(cardsTotal);
             skeletonsTotal = skeletonCards.length;
             for (let i = 0; i < cardsTotal; i++) {
                 // console.log('card');
@@ -230,7 +232,7 @@
     }
     function feedMouseOver(event) {
         const cards = this.querySelectorAll('div.bili-dyn-item');
-        console.log(cards.length);
+        // console.log(cards.length);
         if (notLoaded || cards.length > cardsTotal) {
             // console.log('cards');
             cardsTotal = cards.length;
