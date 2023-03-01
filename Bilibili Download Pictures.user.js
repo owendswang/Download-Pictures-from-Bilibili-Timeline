@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Bilibili Download Pictures
 // @name:zh-CN   下载Bilibili动态页面图片
-// @version      0.7.1
+// @version      0.7.2
 // @description  Download pictures from bilibili timeline
 // @description:zh-CN 下载“Bilibili动态”时间线页面的图片
 // @author       OWENDSWANG
@@ -92,13 +92,17 @@
                 // console.log('click');
                 event.preventDefault();
                 const content = this.closest('div.bili-dyn-item__main');
-                const list = content.querySelectorAll('div.bili-album__preview__picture__img img');
+                const list = content.querySelectorAll('div.bili-album__preview__picture__img');
                 // console.log(list);
                 if (list.length > 0) {
                     for (let j = 0; j < list.length; j++) {
-                        // let imgUrl = list[j].style.backgroundImage.split(/"|@/)[1];
-                        let imgUrl = list[j].src.split(/@/)[0];
-                        console.log(imgUrl);
+                        let imgUrl;
+                        if (list[j].querySelector('img')) {
+                            imgUrl = list[j].querySelector('img').src.split(/@/)[0];
+                        } else {
+                            imgUrl = list[j].style.backgroundImage.split(/"|@/)[1];
+                        }
+                        // console.log(imgUrl);
                         if (imgUrl.startsWith('//')) {
                             imgUrl = 'https:' + imgUrl;
                         }
