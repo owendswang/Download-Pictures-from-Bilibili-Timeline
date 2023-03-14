@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Bilibili Download Pictures
 // @name:zh-CN   下载Bilibili动态页面图片
-// @version      0.7.2
+// @version      0.7.3
 // @description  Download pictures from bilibili timeline
 // @description:zh-CN 下载“Bilibili动态”时间线页面的图片
 // @author       OWENDSWANG
@@ -34,7 +34,7 @@
     }
     function addOpusDownloadButton(card) {
         if(card.getElementsByClassName('download-button').length == 0) {
-            console.log(card);
+            // console.log(card);
             const buttonBar = card.getElementsByClassName('bili-tabs__nav__items')[0];
             let downloadButton = document.createElement('div');
             downloadButton.textContent = '下载';
@@ -42,17 +42,27 @@
             downloadButton.addEventListener('click', function(event) {
                 const content = document.body.querySelector('div.opus-module-content');
                 const list = content.querySelectorAll('div.bili-album__preview__picture__img');
-                if (list.length > 0) {
-                    for (let j = 0; j < list.length; j++) {
-                        let imgUrl = list[j].style.backgroundImage.split(/"|@/)[1];
-                        if (imgUrl.startsWith('//')) {
-                            imgUrl = 'https:' + imgUrl;
-                        }
-                        const imgName = imgUrl.split('/')[imgUrl.split('/').length - 1];
-                        // console.log(imgUrl);
-                        // console.log(imgName);
-                        GM_download(imgUrl, imgName);
+                for (const item of list) {
+                    let imgUrl = item.style.backgroundImage.split(/"|@/)[1];
+                    if (imgUrl.startsWith('//')) {
+                        imgUrl = 'https:' + imgUrl;
                     }
+                    const imgName = imgUrl.split('/')[imgUrl.split('/').length - 1];
+                    // console.log(imgUrl);
+                    // console.log(imgName);
+                    GM_download(imgUrl, imgName);
+                }
+                const topAlbum = document.body.querySelector('div.opus-module-top__album');
+                const topAlbumList = topAlbum.querySelectorAll('div.horizontal-scroll-album__pic__img > img');
+                for (const item of topAlbumList) {
+                    let imgUrl = item.src.split(/@/)[0];
+                    if (imgUrl.startsWith('//')) {
+                        imgUrl = 'https:' + imgUrl;
+                    }
+                    const imgName = imgUrl.split('/')[imgUrl.split('/').length - 1];
+                    // console.log(imgUrl);
+                    // console.log(imgName);
+                    GM_download(imgUrl, imgName);
                 }
             });
             buttonBar.appendChild(downloadButton);
@@ -116,7 +126,7 @@
     }
     function oldHandleCard(card) {
         if (card.getElementsByClassName('imagesbox').length > 0 && card.getElementsByClassName('download-button').length == 0) {
-            console.log('added download button');
+            // console.log('added download button');
             let buttonBar = card.getElementsByClassName('button-bar')[0];
             let buttons = buttonBar.getElementsByClassName('single-button');
             buttons[buttons.length - 1].classList.remove('p-rel');
@@ -199,7 +209,7 @@
         }
     }
     function handleOpusCard(card) {
-         if (card.getElementsByClassName('bili-album').length > 0) {
+         if (card.getElementsByClassName('bili-album').length > 0 || card.getElementsByClassName('')) {
              addOpusDownloadButton(card);
          }
     }
