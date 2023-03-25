@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Bilibili Download Pictures
 // @name:zh-CN   下载Bilibili动态页面图片
-// @version      0.7.4
+// @version      0.7.5
 // @description  Download pictures from bilibili timeline
 // @description:zh-CN 下载“Bilibili动态”时间线页面的图片
 // @author       OWENDSWANG
@@ -42,6 +42,7 @@
             downloadButton.addEventListener('click', function(event) {
                 const content = document.body.querySelector('div.opus-module-content');
                 const list = content.querySelectorAll('div.bili-album__preview__picture__img');
+                // console.log(list);
                 for (const item of list) {
                     let imgUrl = item.style.backgroundImage.split(/"|@/)[1];
                     if (imgUrl.startsWith('//')) {
@@ -53,8 +54,11 @@
                     GM_download(imgUrl, imgName);
                 }
                 const topAlbum = document.body.querySelector('div.opus-module-top__album');
+                const topAlbumIndicatorList = topAlbum.querySelectorAll('div.horizontal-scroll-album__indicator > div > img');
                 const topAlbumList = topAlbum.querySelectorAll('div.horizontal-scroll-album__pic__img > img');
-                for (const item of topAlbumList) {
+                let topList = topAlbumList;
+                if (topAlbumIndicatorList.length > 0) topList = topAlbumIndicatorList;
+                for (const item of topList) {
                     let imgUrl = item.src.split(/@/)[0];
                     if (imgUrl.startsWith('//')) {
                         imgUrl = 'https:' + imgUrl;
