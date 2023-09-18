@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Bilibili Download Pictures
 // @name:zh-CN   下载Bilibili动态页面图片
-// @version      0.7.7
+// @version      0.8.0
 // @description  Download pictures from bilibili timeline
 // @description:zh-CN 下载“Bilibili动态”时间线页面的图片
 // @author       OWENDSWANG
@@ -23,15 +23,15 @@
     let notLoaded = true;
     let cardsTotal = 0;
     let skeletonsTotal = 0;
-    function mostViewedItemMouseClick(event) {
+    /*function mostViewedItemMouseClick(event) {
         notLoaded = true;
         cardsTotal = 0;
-        let feed = document.querySelector('div.bili-dyn-list');
+        let feed = document.body.querySelector('div.bili-dyn-list');
         if (feed) {
             // console.log('feed');
             feed.addEventListener('mouseover', feedMouseOver);
         }
-    }
+    }*/
     function addOpusDownloadButton(card) {
         if(card.getElementsByClassName('download-button').length == 0) {
             // console.log(card);
@@ -234,8 +234,8 @@
         }
     }
     function oldFeedMouseOver(event) {
-        const cards = this.querySelectorAll('div.card');
-        const skeletonCards = this.querySelectorAll('div.card > div.skeleton');
+        const cards = document.body.querySelectorAll('div.feed-card div.card');
+        const skeletonCards = document.body.querySelectorAll('div.feed-card div.card > div.skeleton');
         // console.log(skeletonCards.length);
         if (notLoaded || skeletonCards.length != skeletonsTotal || cards.length > cardsTotal) {
             // console.log('cards');
@@ -250,11 +250,11 @@
             if (cardsTotal > 0) {
                 notLoaded = false;
             }
-            document.body.removeEventListener('mouseover', bodyMouseOver);
+            // document.body.removeEventListener('mouseover', bodyMouseOver);
         }
     }
     function feedMouseOver(event) {
-        const cards = this.querySelectorAll('div.bili-dyn-item');
+        const cards = document.body.querySelectorAll('div.bili-dyn-list div.bili-dyn-item');
         // console.log(cards.length);
         if (notLoaded || cards.length > cardsTotal) {
             // console.log('cards');
@@ -268,40 +268,59 @@
             if (cardsTotal > 0) {
                 notLoaded = false;
             }
-            document.body.removeEventListener('mouseover', bodyMouseOver);
+            // document.body.removeEventListener('mouseover', bodyMouseOver);
         }
     }
     function bodyMouseOver(event) {
         if (notLoaded) {
             // console.log('body');
-            const mostViewedItems = document.querySelectorAll('div.bili-dyn-up-list__item');
+            const mostViewedItems = document.body.querySelectorAll('div.bili-dyn-up-list__item');
             // console.log(mostViewedItems.length);
-            for (let l = 0; l < mostViewedItems.length; l++) {
+            /*for (let l = 0; l < mostViewedItems.length; l++) {
                 mostViewedItems[l].addEventListener('click', mostViewedItemMouseClick);
-            }
-            let feed = document.querySelector('div.bili-dyn-list');
+            }*/
+            let feed = document.body.querySelector('div.bili-dyn-list');
             if (feed) {
                 // console.log('feed');
-                feed.addEventListener('mouseover', feedMouseOver);
-            } else if(document.querySelector('div.bili-dyn-item')) {
-                const card = document.querySelector('div.bili-dyn-item');
+                // feed.addEventListener('mouseover', feedMouseOver);
+                feedMouseOver();
+            } else if(document.body.querySelector('div.bili-dyn-item')) {
+                const card = document.body.querySelector('div.bili-dyn-item');
                 if (card) {
                     handleCard(card);
                     notLoaded = false;
-                    document.body.removeEventListener('mouseover', bodyMouseOver);
+                    // document.body.removeEventListener('mouseover', bodyMouseOver);
                 }
-            } else if (document.querySelector('div.opus-detail')) {
-                const card = document.querySelector('div.opus-detail');
+            } else if (document.body.querySelector('div.opus-detail')) {
+                const card = document.body.querySelector('div.opus-detail');
                 if (card) {
                     handleOpusCard(card);
                     notLoaded = false;
-                    document.body.removeEventListener('mouseover', bodyMouseOver);
+                    // document.body.removeEventListener('mouseover', bodyMouseOver);
                 }
-            } else if(document.querySelector('div.feed-card')) {
-                feed = document.querySelector('div.feed-card');
-                feed.addEventListener('mouseover', oldFeedMouseOver);
+            } else if(document.body.querySelector('div.feed-card')) {
+                // feed = document.querySelector('div.feed-card');
+                // feed.addEventListener('mouseover', oldFeedMouseOver);
+                oldFeedMouseOver();
             }
         }
     }
-    document.body.addEventListener('mouseover', bodyMouseOver);
+    //document.body.addEventListener('mouseover', bodyMouseOver);
+    bodyMouseOver();
+    new MutationObserver((mutationList, observer) => {
+        for (const mutation of mutationList) {
+            // console.log(mutation.target);
+            if (mutation.type === 'childList') {
+                for (const node of mutation.addedNodes) {
+                    //console.log(node);
+                }
+                if (mutation.target.tagName === 'DIV' && mutation.target.className === 'bili-dyn-list__items') {
+                    // console.log(mutation.addedNodes);
+                    for (const node of mutation.addedNodes) {
+                        handleCard(node);
+                    }
+                }
+            }
+        }
+    }).observe(document.body, { attributes: false, childList: true, subtree: true });
 })();
