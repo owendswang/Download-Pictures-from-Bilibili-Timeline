@@ -28,10 +28,10 @@ Or Install manually:
   (If the 'Enable video download' setting changed, the page would reload to make it effective.)
 ![Screenshot](res/1.PNG?raw=true)
 - The button to call out the settings panel is at the top-left corner on the webpage.
-![Screenshot](res/2.PNG?raw=true)
+![Screenshot](res/2.png?raw=true)
 
 ## Screenshot:
-![Screenshot](res/4.PNG?raw=true)
-![Screenshot](res/3.PNG?raw=true)
+![Screenshot](res/4.png?raw=true)
+![Screenshot](res/3.png?raw=true)
 ![Screenshot](res/5.PNG?raw=true)
-![Screenshot](res/6.PNG?raw=true)
+![Screenshot](res/6.png?raw=true)
