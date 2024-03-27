@@ -35,3 +35,6 @@ Or Install manually:
 ![Screenshot](res/3.png?raw=true)  
 ![Screenshot](res/5.PNG?raw=true)  
 ![Screenshot](res/6.png?raw=true)  
+
+## Special Thanks:
+[SocialSisterYi/bilibili-API-collect](https://github.com/SocialSisterYi/bilibili-API-collect)
