@@ -33,3 +33,6 @@ English Version: [README.md](README.md)
 ![截图](res/3.png?raw=true)  
 ![截图](res/5.PNG?raw=true)  
 ![截图](res/6.png?raw=true)
+
+## 特别鸣谢：
+[SocialSisterYi/bilibili-API-collect](https://github.com/SocialSisterYi/bilibili-API-collect)
