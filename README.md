@@ -29,6 +29,8 @@ Or Install manually:
 ![Screenshot](res/1.PNG?raw=true)
 - The button to call out the settings panel is at the top-left corner on the webpage.  
 ![Screenshot](res/2.png?raw=true)
+- It's better to uncheck this settings of the web browser. Otherwise, it would keep popping up for saving location.
+![Screenshot](res/7.png?raw=true)
 
 ## Screenshot:
 ![Screenshot](res/4.png?raw=true)  
