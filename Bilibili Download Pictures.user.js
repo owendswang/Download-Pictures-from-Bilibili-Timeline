@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Bilibili Download Pictures
 // @name:zh-CN   下载Bilibili动态页面图片
-// @version      0.9.4
+// @version      0.9.5
 // @description  Download pictures from bilibili timeline and 720P videos.
 // @description:zh-CN 下载“Bilibili动态”时间线页面的图片，也可下载视频（720P单文件）
 // @author       OWENDSWANG
@@ -22,6 +22,7 @@
 // @grant        GM_setValue
 // @grant        GM_cookie
 // @grant        GM_registerMenuCommand
+// @require      https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js
 // @namespace https://greasyfork.org/users/738244
 // @downloadURL https://update.greasyfork.org/scripts/421885/Bilibili%20Download%20Pictures.user.js
 // @updateURL https://update.greasyfork.org/scripts/421885/Bilibili%20Download%20Pictures.meta.js
@@ -110,7 +111,7 @@
             oReq.send(null);
         });
     }
-    function saveAs(blob, name) {
+    /*function saveAs(blob, name) {
         const link = document.createElement("a");
         link.style.display = "none";
         link.href = URL.createObjectURL(blob);
@@ -123,7 +124,7 @@
             URL.revokeObjectURL(link.href);
             link.parentNode.removeChild(link);
         }, 1000);
-    }
+    }*/
     function downloadError(e, url, name, progress) {
         // console.log(e, url);
         /*GM_notification({
@@ -273,17 +274,17 @@
         let setName = nameSetting;
         setName = setName.replace('{original}', originalName.split('.')[0]);
         setName = setName.replace('{ext}', originalName.split('.')[1]);
-        const userName = card.user.name || data.card.desc.user_profile.info.uname;
-        const userId = card.user.uid || data.card.desc.user_profile.info.uid;
+        const userName = card.user?.name || data.card.desc.user_profile.info.uname;
+        const userId = card.user?.uid || data.card.desc.user_profile.info.uid;
         const dynamicId = data.card.desc.dynamic_id;
-        const content = card.item.description;
+        const content = card.item?.description || card.title;
         setName = setName.replace('{username}', userName);
         setName = setName.replace('{userid}', userId);
         setName = setName.replace('{dynamicid}', dynamicId);
         setName = setName.replace('{index}', index);
         setName = setName.replace('{content}', content.substring(0, 25));
         let YYYY, MM, DD, HH, mm, ss;
-        const postAt = new Date((card.item.upload_time || data.card.desc.timestamp) * 1000);
+        const postAt = new Date((card.item?.upload_time || data.card.desc.timestamp) * 1000);
         YYYY = postAt.getFullYear().toString();
         MM = (postAt.getMonth() + 1).toString().padStart(2, '0');
         DD = postAt.getDate().toString().padStart(2, '0');
@@ -362,6 +363,24 @@
         for (const [ index, picture ] of pictures.entries()) {
             // console.log(picture);
             const pictureUrl = picture.img_src;
+            const originalName = pictureUrl.split('/')[pictureUrl.split('/').length - 1];
+            const pictureName = getPicName(GM_getValue('dlPicName', '{original}.{ext}'), originalName, index + 1, data);
+            /*GM_download({
+                url: pictureUrl,
+                name: pictureName,
+                onerror: function(e) { console.log(e); alert('下载失败！'); },
+                ontimeout: function(e) { console.log(e); alert('下载超时！'); },
+            });*/
+            downloadWrapper(pictureUrl, pictureName);
+        }
+    }
+    async function handleArticleDynamic(data) {
+        const card = JSON.parse(data.card.card);
+        const pictures = card.image_urls;
+        // console.log(pictures);
+        for (const [ index, picture ] of pictures.entries()) {
+            // console.log(picture);
+            const pictureUrl = picture;
             const originalName = pictureUrl.split('/')[pictureUrl.split('/').length - 1];
             const pictureName = getPicName(GM_getValue('dlPicName', '{original}.{ext}'), originalName, index + 1, data);
             /*GM_download({
@@ -491,6 +510,7 @@
                     break;
                 case 64:
                     // 专栏
+                    handleArticleDynamic(dynRes.data);
                     break;
                 case 256:
                     // 音频
