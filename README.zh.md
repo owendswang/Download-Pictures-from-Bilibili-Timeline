@@ -27,6 +27,8 @@ English Version: [README.md](README.md)
 ![截图](res/1.PNG?raw=true)
 - “设置”按钮在页面左上角。  
 ![截图](res/2.png?raw=true)
+- 最好关闭浏览器设置中的这个选项，不然下载多文件时，会不停弹出保存位置窗口。  
+![截图](res/7.png?raw=true)
 
 ## 页面截图:
 ![截图](res/4.png?raw=true)  
