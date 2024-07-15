@@ -1,14 +1,14 @@
 // ==UserScript==
 // @name         Bilibili Download Pictures
 // @name:zh-CN   下载Bilibili动态页面图片
-// @version      0.9.5
+// @version      0.9.6
 // @description  Download pictures from bilibili timeline and 720P videos.
 // @description:zh-CN 下载“Bilibili动态”时间线页面的图片，也可下载视频（720P单文件）
 // @author       OWENDSWANG
 // @icon         https://avatars.githubusercontent.com/u/9076865?s=40&v=4
 // @license      MIT
 // @homepage     https://greasyfork.org/scripts/421885
-// @supportURL   https://github.com/owendswang/Download-Pictures-from-Bilibili-Timeline
+// @supportURL   https://github.com/owendswang/Download-Pictures-from-Bilibili-Timeline/issues
 // @match        https://t.bilibili.com/*
 // @match        https://space.bilibili.com/*/dynamic*
 // @match        https://www.bilibili.com/opus/*
@@ -699,13 +699,13 @@
     }
     function handleOpusCard(card) {
         // console.log('handleOpusCard');
-         if (card.getElementsByClassName('bili-album').length > 0 || (GM_getValue('enableVideoDownload', false) && card.getElementsByClassName('bili-dyn-card-video').length > 0)) {
+         if (card.getElementsByClassName('bili-album').length > 0 || card.getElementsByClassName('horizontal-scroll-album').length > 0 || (GM_getValue('enableVideoDownload', false) && card.getElementsByClassName('bili-dyn-card-video').length > 0)) {
              addOpusDownloadButton(card);
          }
     }
     function handleCard(card) {
         // console.log('handleCard');
-        if (card.getElementsByClassName('bili-album').length > 0) {
+        if (card.getElementsByClassName('bili-album').length > 0 || card.getElementsByClassName('bili-dyn-gallery').length > 0) {
             // console.log('add download button');
             card.getElementsByClassName('bili-album__preview__picture__img').forEach((img) => {
                 img.addEventListener('click', function(event) {
