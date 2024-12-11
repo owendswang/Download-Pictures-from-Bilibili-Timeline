@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Bilibili Download Pictures
 // @name:zh-CN   下载Bilibili动态页面图片
-// @version      0.9.7
+// @version      0.9.8
 // @description  Download pictures from bilibili timeline and 720P videos.
 // @description:zh-CN 下载“Bilibili动态”时间线页面的图片，也可下载视频（720P单文件）
 // @author       OWENDSWANG
@@ -15,6 +15,7 @@
 // @match        https://www.bilibili.com/video/*
 // @connect      bilibili.com
 // @connect      bilivideo.com
+// @connect      bilivideo.cn
 // @connect      hdslb.com
 // @connect      biliimg.com
 // @grant        GM_download
