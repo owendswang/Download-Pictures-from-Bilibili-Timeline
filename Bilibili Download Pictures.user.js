@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Bilibili Download Pictures
 // @name:zh-CN   下载Bilibili动态页面图片
-// @version      0.9.8
+// @version      0.9.9
 // @description  Download pictures from bilibili timeline and 720P videos.
 // @description:zh-CN 下载“Bilibili动态”时间线页面的图片，也可下载视频（720P单文件）
 // @author       OWENDSWANG
@@ -13,6 +13,7 @@
 // @match        https://space.bilibili.com/*/dynamic*
 // @match        https://www.bilibili.com/opus/*
 // @match        https://www.bilibili.com/video/*
+// @match        https://www.bilibili.com/v/topic/detail/?*
 // @connect      bilibili.com
 // @connect      bilivideo.com
 // @connect      bilivideo.cn
@@ -741,6 +742,23 @@
                     }
                     // document.body.removeEventListener('mouseover', bodyMouseOver);
                 }
+            } else if (location.pathname.startsWith('/v/topic/detail') && document.body.querySelector('div.list-view.topic-list__flow-list')) {
+                const cards = document.body.querySelectorAll('div.list-view.topic-list__flow-list div.bili-dyn-item');
+                console.log(cards.length);
+                if (cards.length > cardsTotal) {
+                    // console.log('cards');
+                    cardsTotal = cards.length;
+                    // console.log(cardsTotal);
+                    for (let i = 0; i < cardsTotal; i++) {
+                        // console.log('card');
+                        handleCard(cards[i])
+                        // startIndex += 1;
+                    }
+                    if (cardsTotal > 0) {
+                        notLoaded = false;
+                    }
+                    document.body.removeEventListener('mouseover', bodyMouseOver);
+                }
             } else if(document.body.querySelector('div.bili-dyn-item')) {
                 // console.log('found single card');
                 const card = document.body.querySelector('div.bili-dyn-item');
@@ -757,7 +775,7 @@
                     notLoaded = false;
                     // document.body.removeEventListener('mouseover', bodyMouseOver);
                 }
-            }/* else if (GM_getValue('enableVideoDownload', false) && document.body.querySelector('div.video-toolbar-left-main')) {
+            } /* else if (GM_getValue('enableVideoDownload', false) && document.body.querySelector('div.video-toolbar-left-main')) {
                 const buttonBar = document.body.querySelector('div.video-toolbar-left-main');
                 if (buttonBar) {
                     addPlayPageDownloadButton(buttonBar);
@@ -766,7 +784,7 @@
             }*/
         }
     }
-    // document.body.addEventListener('mouseover', bodyMouseOver);
+    if (location.pathname.startsWith('/v/topic/detail')) document.body.addEventListener('mouseover', bodyMouseOver);
     function showModal(event) {
         // console.log(addDlBtnMode);
         let bg = document.createElement('div');
@@ -1256,7 +1274,7 @@
         for (const mutation of mutationList) {
             // console.log(mutation);
             if (mutation.type === 'childList') {
-                // console.log(mutation.target);
+                // if (!['svg'].includes(mutation.target.tagName)) console.log(mutation.target);
                 /*for (const node of mutation.addedNodes) {
                     // console.log(node.nodeType, node);
                     if (node.nodeType === 1 && Object.keys(mutation.target.getElementsByClassName('video-like')).length > 0) {
@@ -1265,6 +1283,12 @@
                 }*/
                 if (mutation.target.tagName === 'DIV' && ['bili-dyn-list__items', 'content'].includes(mutation.target.className)) {
                     // console.log(mutation.addedNodes);
+                    for (const node of mutation.addedNodes) {
+                        // console.log(node);
+                        handleCard(node);
+                    }
+                } else if (mutation.target.tagName === 'DIV' && mutation.target.parentNode.className === 'list-view topic-list__flow-list') {
+                    // vconsole.log(mutation.addedNodes);
                     for (const node of mutation.addedNodes) {
                         // console.log(node);
                         handleCard(node);
