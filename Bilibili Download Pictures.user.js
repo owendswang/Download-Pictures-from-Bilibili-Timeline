@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Bilibili Download Pictures
 // @name:zh-CN   下载Bilibili动态页面图片
-// @version      0.9.9
+// @version      1.0.0
 // @description  Download pictures from bilibili timeline and 720P videos.
 // @description:zh-CN 下载“Bilibili动态”时间线页面的图片，也可下载视频（720P单文件）
 // @author       OWENDSWANG
@@ -279,7 +279,7 @@
         setName = setName.replace('{ext}', originalName.split('.')[1]);
         const userName = card.user?.name || data.card.desc.user_profile.info.uname;
         const userId = card.user?.uid || data.card.desc.user_profile.info.uid;
-        const dynamicId = data.card.desc.dynamic_id;
+        const dynamicId = data.card.desc.dynamic_id || parseInt(data.card.desc.dynamic_id_str, 10);
         const content = card.item?.description || card.title;
         setName = setName.replace('{username}', userName);
         setName = setName.replace('{userid}', userId);
@@ -744,7 +744,7 @@
                 }
             } else if (location.pathname.startsWith('/v/topic/detail') && document.body.querySelector('div.list-view.topic-list__flow-list')) {
                 const cards = document.body.querySelectorAll('div.list-view.topic-list__flow-list div.bili-dyn-item');
-                console.log(cards.length);
+                // console.log(cards.length);
                 if (cards.length > cardsTotal) {
                     // console.log('cards');
                     cardsTotal = cards.length;
