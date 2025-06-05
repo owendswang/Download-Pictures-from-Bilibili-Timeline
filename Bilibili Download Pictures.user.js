@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Bilibili Download Pictures
 // @name:zh-CN   下载Bilibili动态页面图片
-// @version      1.0.0
+// @version      1.1.0
 // @description  Download pictures from bilibili timeline and 720P videos.
 // @description:zh-CN 下载“Bilibili动态”时间线页面的图片，也可下载视频（720P单文件）
 // @author       OWENDSWANG
@@ -35,11 +35,13 @@
     'use strict';
 
     // Your code here...
-    const settingVersion = 1;
+    const settingVersion = 2;
     const downloadIcon = 'url(\'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAUCAYAAACNiR0NAAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAALEgAACxIB0t1+/AAAABx0RVh0U29mdHdhcmUAQWRvYmUgRmlyZXdvcmtzIENTNui8sowAAAHpSURBVDiNndS7a1RREMfxz9XVrI8UIkjwLxCipYVp9A+wEQsV8dFksLCwUATxAYqNIAhWO4UPsAqCCGqTQkRQULEMgojYCSK+X4nhWty7uCZ3k5gfnObMOd8zM2dmirIs9SozV+IxNmCJZk3jObZGxFSvodVweD024TMm+wDb2Iy1eDsfcCkKHMSdPsB9uFKf/UdNwK4mI+J3kyEzp5r26Z8jTa8v5N5cwEWpCdgYZh/NOtuCzGyrQiwx+B/Awcz8ovrE6Yj42crMcYyoSqRdr/nULd6X+IFfWJaZYy1cwhA24j5u1t4+mAN4D0cwhb21Q89wtSjLUmauxm1sw56IGFtIvJm5H9dxFzsj4lfR23qZeQ0HcDEijs4Du4zD6ETEoe5+0el0zuNnURTnRkdHZeYpnMUt7JrZq5k5oErLdhyPiAuZuQyn8XEJTuBMWZbLISLOqVprB55k5roe2BCe1rDdEXGhNq3CSRxrqX73U68XEXEjM99gHBOZuUVVs4+wAiMR8bjnSolv+NC3UyLiIYZVU+cFJvARwzNg/6gLLDVUfUS8UpXTw3ptjIjXDZzpmlF2p02BdmbOmn8R8V1VTiAzmybUQM0oik6n81WVl/f9wvC3M4o+9kI1bD+08A5r6rVYlapcf/0DW06ifC1dVCUAAAAASUVORK5CYII=\')';
+
     let notLoaded = true;
     let cardsTotal = 0;
     let skeletonsTotal = 0;
+
     let downloadQueueCard = document.createElement('div');
     downloadQueueCard.style.position = 'fixed';
     downloadQueueCard.style.bottom = '0.5rem';
@@ -97,6 +99,15 @@
     }
     progressBar.appendChild(progressCloseBtn);
     // downloadQueueCard.appendChild(progressBar);
+
+    function sleep(seconds) {
+        return new Promise((resolve) => {
+            setTimeout(() => {
+                resolve();
+            }, seconds * 1000);
+        });
+    }
+
     function oXMLHttpRequest(url, type) {
         return new Promise(function(resolve, reject) {
             let oReq = new XMLHttpRequest();
@@ -114,6 +125,7 @@
             oReq.send(null);
         });
     }
+
     /*function saveAs(blob, name) {
         const link = document.createElement("a");
         link.style.display = "none";
@@ -128,6 +140,7 @@
             link.parentNode.removeChild(link);
         }, 1000);
     }*/
+
     function downloadError(e, url, name, progress) {
         // console.log(e, url);
         /*GM_notification({
@@ -178,6 +191,7 @@
         };
         // setTimeout(() => { progress.remove(); if(downloadQueueCard.childElementCount == 1) downloadQueueTitle.style.display = 'none'; }, 1000);
     }
+
     function downloadWrapper(url, name) {
         // console.log('downloadWrapper: ', url, name);
         downloadQueueTitle.style.display = 'block';
@@ -223,6 +237,7 @@
             };
         });
     }
+
     /*function getCookie(name) {
         return new Promise(function(resolve, reject) {
             GM_cookie.list({ name: name }, function(cookies, error) {
@@ -235,6 +250,7 @@
             });
         });
     }
+
     function getAllCookies() {
         return new Promise(function(resolve, reject) {
             GM_cookie.list({}, function(cookies, error) {
@@ -250,6 +266,7 @@
             });
         });
     }
+
     function download2Blob(url) {
         // console.log('download2Blob: ', url);
         return new Promise(function(resolve, reject) {
@@ -272,6 +289,7 @@
             });
         });
     }*/
+
     function getPicName(nameSetting, originalName, index, data) {
         const card = JSON.parse(data.card.card);
         let setName = nameSetting;
@@ -325,6 +343,7 @@
         }*/
         return setName.replace(/[<|>|*|"|\/|\\|\||:|?|\n]/g, '_');
     }
+
     function getVidName(nameSetting, originalName, data) {
         let setName = nameSetting;
         setName = setName.replace('{original}', originalName.split('.')[0]);
@@ -359,46 +378,54 @@
         setName = setName.replace('{ss}', ss);
         return setName.replace(/[<|>|*|"|\/|\\|\||:|?|\n]/g, '_');
     }
-    function handleImageDynamic(data) {
+
+    async function handleImageDynamic(data) {
         const card = JSON.parse(data.card.card);
         const pictures = card.item.pictures;
         // console.log(pictures);
-        for (const [ index, picture ] of pictures.entries()) {
-            // console.log(picture);
-            const pictureUrl = picture.img_src;
-            const originalName = pictureUrl.split('/')[pictureUrl.split('/').length - 1];
-            const pictureName = getPicName(GM_getValue('dlPicName', '{original}.{ext}'), originalName, index + 1, data);
-            /*GM_download({
-                url: pictureUrl,
-                name: pictureName,
-                onerror: function(e) { console.log(e); alert('下载失败！'); },
-                ontimeout: function(e) { console.log(e); alert('下载超时！'); },
-            });*/
-            downloadWrapper(pictureUrl, pictureName);
+        if (Array.isArray(pictures)) {
+            await Promise.all(pictures.map(function(picture, index) {
+                // console.log(picture);
+                const pictureUrl = picture.img_src;
+                const originalName = pictureUrl.split('/')[pictureUrl.split('/').length - 1];
+                const pictureName = getPicName(GM_getValue('dlPicName', '{original}.{ext}'), originalName, index + 1, data);
+                /*GM_download({
+                    url: pictureUrl,
+                    name: pictureName,
+                    onerror: function(e) { console.log(e); alert('下载失败！'); },
+                    ontimeout: function(e) { console.log(e); alert('下载超时！'); },
+                });*/
+                return downloadWrapper(pictureUrl, pictureName);
+            }));
         }
     }
+
     async function handleArticleDynamic(data) {
         const card = JSON.parse(data.card.card);
         const pictures = card.image_urls;
         // console.log(pictures);
-        for (const [ index, picture ] of pictures.entries()) {
-            // console.log(picture);
-            const pictureUrl = picture;
-            const originalName = pictureUrl.split('/')[pictureUrl.split('/').length - 1];
-            const pictureName = getPicName(GM_getValue('dlPicName', '{original}.{ext}'), originalName, index + 1, data);
-            /*GM_download({
-                url: pictureUrl,
-                name: pictureName,
-                onerror: function(e) { console.log(e); alert('下载失败！'); },
-                ontimeout: function(e) { console.log(e); alert('下载超时！'); },
-            });*/
-            downloadWrapper(pictureUrl, pictureName);
+        if (Array.isArray(pictures)) {
+            await Promise.all(pictures.map(function(picture, index) {
+                // console.log(picture);
+                const pictureUrl = picture;
+                const originalName = pictureUrl.split('/')[pictureUrl.split('/').length - 1];
+                const pictureName = getPicName(GM_getValue('dlPicName', '{original}.{ext}'), originalName, index + 1, data);
+                /*GM_download({
+                    url: pictureUrl,
+                    name: pictureName,
+                    onerror: function(e) { console.log(e); alert('下载失败！'); },
+                    ontimeout: function(e) { console.log(e); alert('下载超时！'); },
+                });*/
+                return downloadWrapper(pictureUrl, pictureName);
+            }));
         }
     }
+
     function getVideoInfo(bvid) {
         // console.log('getVideoInfo');
         return oXMLHttpRequest('https://api.bilibili.com/x/web-interface/view?bvid=' + bvid, 'json');
     }
+
     function getVideoDetail(aid, cid/*, cookies*/) {
         /*return new Promise(function(resolve, reject) {
             // console.log(aid, cid, cookies);
@@ -421,6 +448,7 @@
         });*/
         return oXMLHttpRequest('https://api.bilibili.com/x/player/wbi/playurl?avid=' + aid.toString() + '&cid=' + cid.toString() + '&fnval=64', 'json');
     }
+
     async function downloadVideo(data) {
         const vidRes = await getVideoDetail(data.aid, data.cid/*, cookies*/);
         // console.log(vidRes);
@@ -449,13 +477,15 @@
             ontimeout: function(e) { console.log(e); alert('下载超时！'); },
         });
         saveAs(blob, vidName);*/
-        downloadWrapper(vidUrl, vidName);
+        await downloadWrapper(vidUrl, vidName);
     }
+
     async function handleVideoDownload(bvid) {
         const vidInfoRes = await getVideoInfo(bvid);
         // console.log(vidInfoRes);
         await downloadVideo(vidInfoRes.data);
     }
+
     async function handleVideoDynamic(data) {
         // console.log('handleVideoDynamic');
         // console.log(data);
@@ -470,6 +500,7 @@
         const bvid = data.card.desc.bvid;
         await handleVideoDownload(bvid);
     }
+
     function getDynamicDetail(dynId) {
         /*return new Promise(function(resolve, reject) {
             GM_xmlhttpRequest({
@@ -488,11 +519,15 @@
         return oXMLHttpRequest('https://api.vc.bilibili.com/dynamic_svr/v1/dynamic_svr/get_dynamic_detail?dynamic_id=' + dynId, 'json');
         // return oXMLHttpRequest('https://api.bilibili.com/x/polymer/web-dynamic/v1/detail?id=' + dynId, 'json');
     }
-    async function handleDynamicDownload(dynId) {
+
+    async function handleDynamicDownload(dynId, downloadButton) {
+        if (downloadButton) {
+            downloadButton.textContent = '下载中……';
+        }
         // console.log('handleDynamicDownload: ' + dynId);
-        const dynRes = await getDynamicDetail(dynId);
-        // console.log(dynRes.data);
-        if (dynRes.data.card.card) {
+        try {
+            const dynRes = await getDynamicDetail(dynId);
+            // console.log(dynRes.data);
             const card = JSON.parse(dynRes.data.card.card);
             switch(dynRes.data.card.desc.type) {
                 case 1:
@@ -501,7 +536,7 @@
                 case 2:
                     // 图片
                     // console.log('picture');
-                    handleImageDynamic(dynRes.data);
+                    await handleImageDynamic(dynRes.data);
                     break;
                 case 4:
                     // 文字
@@ -509,11 +544,11 @@
                 case 8:
                     // 视频
                     // console.log('video');
-                    handleVideoDynamic(dynRes.data);
+                    await handleVideoDynamic(dynRes.data);
                     break;
                 case 64:
                     // 专栏
-                    handleArticleDynamic(dynRes.data);
+                    await handleArticleDynamic(dynRes.data);
                     break;
                 case 256:
                     // 音频
@@ -521,11 +556,20 @@
                 default:
                     break;
             }
-        } else {
-            console.log('no content found!', dynRes);
-            alert('无法下载！');
+            if (downloadButton) {
+                downloadButton.textContent = '已完成';
+            }
+            return true;
+        } catch(e) {
+            console.error(e);
+            if (downloadButton) {
+                downloadButton.textContent = '下载';
+            }
+            if (!listDownloading) alert('无法下载！');
+            return false;
         }
     }
+
     function addOpusDownloadButton(card) {
         if(card.getElementsByClassName('download-button').length == 0) {
             // console.log(card);
@@ -533,10 +577,10 @@
             let downloadButton = document.createElement('div');
             downloadButton.textContent = '下载';
             downloadButton.classList.add('bili-tabs__nav__item');
-            downloadButton.addEventListener('click', function(event) {
+            downloadButton.addEventListener('click', async function(event) {
                 const dynId = window.location.pathname.split('/')[window.location.pathname.split('/').length - 1];
                 // console.log(dynId);
-                handleDynamicDownload(dynId);
+                await handleDynamicDownload(dynId, this);
                 /*const content = document.body.querySelector('div.opus-module-content');
                 const list = content.querySelectorAll('div.bili-album__preview__picture__img');
                 // console.log(list);
@@ -571,6 +615,7 @@
             buttonBar.appendChild(downloadButton);
         }
     }
+
     function addDownloadButton(card) {
         // console.log('addDownloadButton');
         if(card.getElementsByClassName('download-button').length == 0) {
@@ -613,7 +658,7 @@
                     const opusCard = content.querySelector('[dyn-id]');
                     // console.log(opusCard.getAttribute('dyn-id'));
                     const dynId = opusCard.getAttribute('dyn-id');
-                    handleDynamicDownload(dynId);
+                    await handleDynamicDownload(dynId, this.querySelector('span'));
                     /*const list = content.querySelectorAll('div.bili-album__preview__picture,div.preview__picture__img.b-img');
                     // console.log(list);
                     if (list.length > 0) {
@@ -640,7 +685,7 @@
                 let downloadButton = document.createElement('div');
                 downloadButton.textContent = '下载';
                 downloadButton.classList.add('bili-tabs__nav__item');
-                downloadButton.addEventListener('click', function(event) {
+                downloadButton.addEventListener('click', async function(event) {
                     // console.log('click');
                     event.preventDefault();
                     const content = this.closest('div.card');
@@ -648,7 +693,7 @@
                     const opusCard = content.querySelector('[dyn-id]');
                     // console.log(opusCard.getAttribute('dyn-id'));
                     const dynId = opusCard.getAttribute('dyn-id');
-                    handleDynamicDownload(dynId);
+                    await handleDynamicDownload(dynId, this);
                     /*const list = content.querySelectorAll('div.bili-album__preview__picture,div.preview__picture__img.b-img');
                     // console.log(list);
                     if (list.length > 0) {
@@ -673,6 +718,7 @@
             }
         }
     }
+
     function addPlayPageDownloadButton(buttonBar) {
         let buttonWrap = document.createElement('div');
         buttonWrap.className = 'toolbar-left-item-wrap';
@@ -700,12 +746,14 @@
             handleVideoDownload(bvid);
         });
     }
+
     function handleOpusCard(card) {
         // console.log('handleOpusCard');
          if (card.getElementsByClassName('bili-album').length > 0 || card.getElementsByClassName('horizontal-scroll-album').length > 0 || (GM_getValue('enableVideoDownload', false) && card.getElementsByClassName('bili-dyn-card-video').length > 0)) {
              addOpusDownloadButton(card);
          }
     }
+
     function handleCard(card) {
         // console.log('handleCard');
         if (card.getElementsByClassName('bili-album').length > 0 || card.getElementsByClassName('bili-dyn-gallery').length > 0) {
@@ -720,6 +768,7 @@
             addDownloadButton(card);
         }
     }
+
     function bodyMouseOver(event) {
         // console.log('bodyMouseOver');
         if (notLoaded) {
@@ -784,7 +833,9 @@
             }*/
         }
     }
+
     if (location.pathname.startsWith('/v/topic/detail')) document.body.addEventListener('mouseover', bodyMouseOver);
+
     function showModal(event) {
         // console.log(addDlBtnMode);
         let bg = document.createElement('div');
@@ -794,6 +845,7 @@
         bg.style.zIndex = 500;
         bg.style.backgroundColor = 'black';
         bg.style.opacity = 0.5;
+
         let modal = document.createElement('div');
         document.body.appendChild(bg);
         modal.style.position = 'fixed';
@@ -809,6 +861,7 @@
         modal.style.overflowX = 'hidden';
         modal.style.overflowY = 'auto';
         modal.style.fontSize = '1rem';
+
         let titleBar = document.createElement('div');
         titleBar.textContent = '欢迎使用“下载Bilibili动态页面图片”脚本';
         titleBar.style.width = '100%';
@@ -822,6 +875,7 @@
         titleBar.style.borderTopLeftRadius = '0.3rem';
         titleBar.style.borderTopRightRadius = '0.3rem';
         modal.appendChild(titleBar);
+
         let question1 = document.createElement('p');
         question1.style.paddingLeft = '2rem';
         question1.style.paddingRight = '2rem';
@@ -850,6 +904,7 @@
         PicNameExplain1.style.marginBottom = '0';
         PicNameExplain1.style.whiteSpace = 'pre';
         PicNameExplain1.style.color = 'gray';
+        PicNameExplain1.style.lineHeight = '1.1rem';
         question1.appendChild(PicNameExplain1);
         /*let PicNameExplain2 = document.createElement('p');
         PicNameExplain2.innerHTML = '<b>注意</b>：启用“打包下载”时，需区分多文件名称，\n避免重复而导致打包后只有一个文件，文件命\n名时，必须包含{original}、{index}中至少一个\n标签。';
@@ -858,6 +913,7 @@
         PicNameExplain2.style.color = 'gray';
         question1.appendChild(PicNameExplain2);*/
         modal.appendChild(question1);
+
         let question2 = document.createElement('p');
         question2.style.paddingLeft = '2rem';
         question2.style.paddingRight = '2rem';
@@ -872,6 +928,7 @@
         let inputVideoDownload = document.createElement('input');
         inputVideoDownload.type = 'checkbox';
         inputVideoDownload.id = 'enableVideoDownload';
+        inputVideoDownload.name = 'enableVideoDownload';
         inputVideoDownload.checked = GM_getValue('enableVideoDownload', false);
         question2.appendChild(inputVideoDownload);
         let videoDownloadExplain = document.createElement('p');
@@ -879,9 +936,10 @@
         videoDownloadExplain.style.marginTop = '0.5rem';
         videoDownloadExplain.style.marginBottom = '0';
         videoDownloadExplain.style.color = 'gray';
+        videoDownloadExplain.style.lineHeight = '1.1rem';
         question2.appendChild(videoDownloadExplain);
         let labelVidName = document.createElement('label');
-        labelVidName.textContent = '下载图片文件名';
+        labelVidName.textContent = '下载视频文件名';
         labelVidName.setAttribute('for', 'dlVidName');
         labelVidName.style.display = 'block';
         labelVidName.style.marginTop = '0.5rem';
@@ -907,8 +965,10 @@
         vidNameExplain1.style.marginBottom = '0';
         vidNameExplain1.style.whiteSpace = 'pre';
         vidNameExplain1.style.color = 'gray';
+        vidNameExplain1.style.lineHeight = '1.1rem';
         question2.appendChild(vidNameExplain1);
         modal.appendChild(question2);
+
         /*let question3 = document.createElement('p');
         question3.style.paddingLeft = '2rem';
         question3.style.paddingRight = '2rem';
@@ -958,6 +1018,7 @@
         // filePackExplain.style.display = GM_getValue('zipMode', false) ? 'block' : 'none';
         question3.appendChild(filePackExplain);
         modal.appendChild(question3);
+
         let question4 = document.createElement('p');
         question4.style.paddingLeft = '2rem';
         question4.style.paddingRight = '2rem';
@@ -1036,6 +1097,7 @@
         // retweetPackExplain.style.display = (GM_getValue('zipMode', false) && GM_getValue('retweetMode', false) && !GM_getValue('ariaMode', false)) ? 'block' : 'none';
         question4.appendChild(retweetPackExplain);
         modal.appendChild(question4);
+
         let question5 = document.createElement('p');
         question5.style.paddingLeft = '2rem';
         question5.style.paddingRight = '2rem';
@@ -1086,8 +1148,92 @@
         inputAriaExplain.style.marginBottom = '0';
         inputAriaExplain.style.color = 'gray';
         question5.appendChild(inputAriaExplain);
-        modal.appendChild(question5);
-        inputRetweetMode.addEventListener('change', function(event) {
+        modal.appendChild(question5);*/
+
+        let question6 = document.createElement('p');
+        question6.style.paddingLeft = '2rem';
+        question6.style.paddingRight = '2rem';
+        question6.style.marginTop = '1rem';
+        question6.style.marginBottom = '0';
+        let question6Title = document.createElement('div');
+        question6Title.textContent = '瀑布流下载设置选项：';
+        question6Title.style.fontWeight = 'bold';
+        question6Title.style.lineHeight = '2rem';
+        question6.appendChild(question6Title);
+        let labelListDownloadSkipReference = document.createElement('label');
+        labelListDownloadSkipReference.setAttribute('for', 'listDownloadSkipReference');
+        labelListDownloadSkipReference.textContent = '跳过转发';
+        labelListDownloadSkipReference.style.display = 'inline-block';
+        labelListDownloadSkipReference.style.paddingRight = '0.2rem';
+        labelListDownloadSkipReference.style.marginTop = '0.5rem';
+        question6.appendChild(labelListDownloadSkipReference);
+        let inputListDownloadSkipReference = document.createElement('input');
+        inputListDownloadSkipReference.type = 'checkbox';
+        inputListDownloadSkipReference.id = 'listDownloadSkipReference';
+        inputListDownloadSkipReference.name = 'listDownloadSkipReference';
+        inputListDownloadSkipReference.style.marginTop = '0.5rem';
+        inputListDownloadSkipReference.checked = GM_getValue('listDownloadSkipReference', true);
+        question6.appendChild(inputListDownloadSkipReference);
+        question6.appendChild(document.createElement('br'));
+        let labelListDownloadSleepGapSeconds = document.createElement('label');
+        labelListDownloadSleepGapSeconds.setAttribute('for', 'listDownloadSleepGapSeconds');
+        labelListDownloadSleepGapSeconds.textContent = '连续下载的间隔时间（秒）';
+        labelListDownloadSleepGapSeconds.style.display = 'inline-block';
+        labelListDownloadSleepGapSeconds.style.paddingRight = '0.2rem';
+        labelListDownloadSleepGapSeconds.style.marginTop = '0.5rem';
+        question6.appendChild(labelListDownloadSleepGapSeconds);
+        let inputListDownloadSleepGapSeconds = document.createElement('input');
+        inputListDownloadSleepGapSeconds.type = 'number';
+        inputListDownloadSleepGapSeconds.id = 'listDownloadSleepGapSeconds';
+        inputListDownloadSleepGapSeconds.name = 'listDownloadSleepGapSeconds';
+        inputListDownloadSleepGapSeconds.style.marginTop = '0.5rem';
+        inputListDownloadSleepGapSeconds.style.width = '3rem';
+        inputListDownloadSleepGapSeconds.style.padding = '0.1rem 0.2rem 0.1rem 0.2rem';
+        inputListDownloadSleepGapSeconds.style.borderStyle = 'solid';
+        inputListDownloadSleepGapSeconds.style.borderWidth = '0.14rem';
+        inputListDownloadSleepGapSeconds.style.borderRadius = '0.2rem';
+        inputListDownloadSleepGapSeconds.style.borderColor = 'gray';
+        inputListDownloadSleepGapSeconds.defaultValue = GM_getValue('listDownloadSleepGapSeconds', 2);
+        question6.appendChild(inputListDownloadSleepGapSeconds);
+        let listDownloadSleepGapSecondsExplain = document.createElement('p');
+        listDownloadSleepGapSecondsExplain.innerHTML = '此项设置每下载一个动态后等待的秒数，\n避免请求过于频繁而触发API限制。';
+        listDownloadSleepGapSecondsExplain.style.marginTop = '0.5rem';
+        listDownloadSleepGapSecondsExplain.style.marginBottom = '0';
+        listDownloadSleepGapSecondsExplain.style.whiteSpace = 'pre';
+        listDownloadSleepGapSecondsExplain.style.color = 'gray';
+        listDownloadSleepGapSecondsExplain.style.lineHeight = '1.1rem';
+        question6.appendChild(listDownloadSleepGapSecondsExplain);
+        let labelListDownloadRetryAttempsLimit = document.createElement('label');
+        labelListDownloadRetryAttempsLimit.setAttribute('for', 'listDownloadRetryAttempsLimit');
+        labelListDownloadRetryAttempsLimit.textContent = '自动重试次数';
+        labelListDownloadRetryAttempsLimit.style.display = 'inline-block';
+        labelListDownloadRetryAttempsLimit.style.paddingRight = '0.2rem';
+        labelListDownloadRetryAttempsLimit.style.marginTop = '0.5rem';
+        question6.appendChild(labelListDownloadRetryAttempsLimit);
+        let inputListDownloadRetryAttempsLimit = document.createElement('input');
+        inputListDownloadRetryAttempsLimit.type = 'number';
+        inputListDownloadRetryAttempsLimit.id = 'listDownloadRetryAttempsLimit';
+        inputListDownloadRetryAttempsLimit.name = 'listDownloadRetryAttempsLimit';
+        inputListDownloadRetryAttempsLimit.style.marginTop = '0.5rem';
+        inputListDownloadRetryAttempsLimit.style.width = '3rem';
+        inputListDownloadRetryAttempsLimit.style.padding = '0.1rem 0.2rem 0.1rem 0.2rem';
+        inputListDownloadRetryAttempsLimit.style.borderStyle = 'solid';
+        inputListDownloadRetryAttempsLimit.style.borderWidth = '0.14rem';
+        inputListDownloadRetryAttempsLimit.style.borderRadius = '0.2rem';
+        inputListDownloadRetryAttempsLimit.style.borderColor = 'gray';
+        inputListDownloadRetryAttempsLimit.defaultValue = GM_getValue('listDownloadRetryAttempsLimit', 3);
+        question6.appendChild(inputListDownloadRetryAttempsLimit);
+        let listDownloadRetryAttempsLimitExplain = document.createElement('p');
+        listDownloadRetryAttempsLimitExplain.innerHTML = '连续的下载可能会触发API请求限制而报错，\n此项设置遇到报错后自动重试的次数。';
+        listDownloadRetryAttempsLimitExplain.style.marginTop = '0.5rem';
+        listDownloadRetryAttempsLimitExplain.style.marginBottom = '0';
+        listDownloadRetryAttempsLimitExplain.style.whiteSpace = 'pre';
+        listDownloadRetryAttempsLimitExplain.style.color = 'gray';
+        listDownloadRetryAttempsLimitExplain.style.lineHeight = '1.1rem';
+        question6.appendChild(listDownloadRetryAttempsLimitExplain);
+        modal.appendChild(question6);
+
+        /*inputRetweetMode.addEventListener('change', function(event) {
             if (event.currentTarget.checked) {
                 // labelRetweetFileName.style.display = 'block';
                 // inputRetweetFileName.style.display = 'block';
@@ -1113,6 +1259,7 @@
                 inputRetweetPackName.style.borderColor = 'lightgray';
             }
         });
+
         inputZipMode.addEventListener('change', function(event) {
             if (event.currentTarget.checked) {
                 // labelPackName.style.display = 'block';
@@ -1139,6 +1286,7 @@
                 inputRetweetPackName.style.borderColor = 'lightgray';
             }
         });
+
         inputAriaMode.addEventListener('change', function(event) {
             if (event.currentTarget.checked) {
                 // labelAriaRpcUrl.style.display = 'block';
@@ -1176,6 +1324,7 @@
                 inputRetweetPackName.style.borderColor = 'lightgray';
             }
         });*/
+
         inputVideoDownload.addEventListener('change', function(event) {
             if (event.currentTarget.checked) {
                 // labelRetweetFileName.style.display = 'block';
@@ -1193,6 +1342,7 @@
                 inputVidName.style.borderColor = 'lightgray';
             }
         });
+
         let okButton = document.createElement('button');
         okButton.textContent = '确定';
         okButton.style.paddingTop = '0.5rem';
@@ -1219,6 +1369,7 @@
         okButton.addEventListener('mouseover', function(event) {
             okButton.style.backgroundColor = 'blue';
         });
+
         function resizeWindow(event) {
             // console.log('resize');
             bg.style.width = document.documentElement.clientWidth.toString() + 'px';
@@ -1226,6 +1377,7 @@
             modal.style.top = (( document.documentElement.clientHeight - modal.offsetHeight ) / 2).toString() + 'px';
             modal.style.left = (( document.documentElement.clientWidth - modal.offsetWidth ) / 2).toString() + 'px';
         }
+
         okButton.addEventListener('click', function(event) {
             /*if (document.getElementById('zipMode').checked && !document.getElementById('dlPicName').value.includes('{original}') && !document.getElementById('dlPicName').value.includes('{index}')) {
                 alert('启用“打包下载”时，需区分多文件名称，避免重复而导致打包后只有一个文件，文件命名时，必须包含{original}、{index}中至少一个标签。');
@@ -1246,6 +1398,11 @@
             // GM_setValue('retweetPackFileName', document.getElementById('retweetPackFileName').value);
             // GM_setValue('ariaMode', document.getElementById('ariaMode').checked);
             // GM_setValue('ariaRpcUrl', document.getElementById('ariaRpcUrl').value);
+            GM_setValue('listDownloadSkipReference', document.getElementById('listDownloadSkipReference').checked);
+            const listDownloadRetryAttempsLimitValue = document.getElementById('listDownloadRetryAttempsLimit').value;
+            GM_setValue('listDownloadRetryAttempsLimit', isNaN(Math.round(listDownloadRetryAttempsLimitValue) ? 3 : Math.round(listDownloadRetryAttempsLimitValue)));
+            const listDownloadSleepGapSecondsValue = document.getElementById('listDownloadSleepGapSeconds').value;
+            GM_setValue('listDownloadSleepGapSeconds', isNaN(Math.round(listDownloadSleepGapSecondsValue)) ? 2 : Math.round(listDownloadSleepGapSecondsValue));
             GM_setValue('isSet', settingVersion);
             if (refreshFlag) {
                 alert('已' + (document.getElementById('enableVideoDownload').checked ? '开启' : '关闭') + '视频下载功能，将在页面刷新后生效。');
@@ -1256,6 +1413,7 @@
             document.body.removeChild(bg);
         });
         modal.appendChild(okButton);
+
         document.body.appendChild(modal);
         /*bg.addEventListener('click', function(event) {
             document.body.removeChild(modal);
@@ -1269,7 +1427,9 @@
     if(GM_getValue('isSet', null) !== settingVersion) {
         showModal();
     }
+
     bodyMouseOver();
+
     new MutationObserver((mutationList, observer) => {
         for (const mutation of mutationList) {
             // console.log(mutation);
@@ -1287,7 +1447,7 @@
                         // console.log(node);
                         handleCard(node);
                     }
-                } else if (mutation.target.tagName === 'DIV' && mutation.target.parentNode.className === 'list-view topic-list__flow-list') {
+                } else if (mutation.target.tagName === 'DIV' && mutation.target.parentNode?.className === 'list-view topic-list__flow-list') {
                     // vconsole.log(mutation.addedNodes);
                     for (const node of mutation.addedNodes) {
                         // console.log(node);
@@ -1309,40 +1469,183 @@
         }
     }).observe(document.body, { attributes: false, childList: true, subtree: true });
 
-    let settingButton = document.createElement('button');
-    settingButton.textContent = '设置';
-    settingButton.style.position = 'fixed';
-    settingButton.style.top = '4rem';
-    settingButton.style.left = '0rem';
-    settingButton.style.fontSize = '0.7rem';
-    settingButton.style.backgroundColor = 'gray';
-    settingButton.style.color = 'white';
-    settingButton.style.borderWidth = '0.2rem';
-    settingButton.style.borderStyle = 'solid';
-    settingButton.style.borderRadius = '0.5rem';
-    settingButton.style.borderColor = 'lightgrey';
-    settingButton.style.zIndex = 400;
-    settingButton.style.paddingLeft = '1rem';
-    settingButton.style.paddingRight = '1rem';
-    settingButton.style.paddingTop = '0.2rem';
-    settingButton.style.paddingBottom = '0.2rem';
-    settingButton.addEventListener('mouseover', function(event) {
-        settingButton.style.backgroundColor = 'darkgray';
-        settingButton.style.color = 'black';
-    });
-    settingButton.addEventListener('mouseout', function(event) {
+    function addSettingButton() {
+        let settingButton = document.createElement('button');
+        settingButton.id = 'settingButton';
+        settingButton.textContent = '设置';
+        settingButton.style.position = 'fixed';
+        settingButton.style.top = '4rem';
+        settingButton.style.left = '0rem';
+        settingButton.style.fontSize = '0.7rem';
         settingButton.style.backgroundColor = 'gray';
         settingButton.style.color = 'white';
-    });
-    settingButton.addEventListener('mousedown', function(event) {
-        settingButton.style.backgroundColor = 'gray';
-        settingButton.style.color = 'white';
-    });
-    settingButton.addEventListener('mouseup', function(event) {
-        settingButton.style.backgroundColor = 'darkgray';
-        settingButton.style.color = 'black';
-    });
-    settingButton.addEventListener('click', showModal);
-    document.body.appendChild(settingButton);
-    GM_registerMenuCommand('设置', showModal, "0");
+        settingButton.style.borderWidth = '0.2rem';
+        settingButton.style.borderStyle = 'solid';
+        settingButton.style.borderRadius = '0.5rem';
+        settingButton.style.borderColor = 'lightgrey';
+        settingButton.style.zIndex = 400;
+        settingButton.style.paddingLeft = '1rem';
+        settingButton.style.paddingRight = '1rem';
+        settingButton.style.paddingTop = '0.2rem';
+        settingButton.style.paddingBottom = '0.2rem';
+        settingButton.style.lineHeight = '1.2rem';
+        settingButton.addEventListener('mouseover', function(event) {
+            settingButton.style.backgroundColor = 'darkgray';
+            settingButton.style.color = 'black';
+        });
+        settingButton.addEventListener('mouseout', function(event) {
+            settingButton.style.backgroundColor = 'gray';
+            settingButton.style.color = 'white';
+        });
+        settingButton.addEventListener('mousedown', function(event) {
+            settingButton.style.backgroundColor = 'gray';
+            settingButton.style.color = 'white';
+        });
+        settingButton.addEventListener('mouseup', function(event) {
+            settingButton.style.backgroundColor = 'darkgray';
+            settingButton.style.color = 'black';
+        });
+        settingButton.addEventListener('click', showModal);
+        document.body.appendChild(settingButton);
+        GM_registerMenuCommand('设置', showModal, "0");
+    }
+
+    let listDownloading = false;
+    let stopDownloadingList = false;
+    let listDownloadingIndex = 0;
+    async function downloadList(e) {
+        // console.log(this);
+        if (!listDownloading && !stopDownloadingList) {
+            listDownloading = true;
+            listDownloadingIndex = 0;
+            this.textContent = '停止下载瀑布流';
+            this.disable = true;
+            let retryAttempts = 0;
+            while(!stopDownloadingList) {
+                const selfListDom = document.body.querySelector('div.bili-dyn-list');
+                if (selfListDom) {
+                    // console.log(selfListDom);
+                    const contentDoms = selfListDom.querySelectorAll('div.bili-dyn-item__main');
+                    this.textContent = `停止下载瀑布流\n(正在下载第 ${(listDownloadingIndex + 1).toString()} 个动态)`;
+                    const contentDom = contentDoms[listDownloadingIndex];
+                    if (contentDom) {
+                        contentDom.scrollIntoView();
+                        // console.log(contentDom);
+                        const downloadButton = contentDom.querySelector('div.download-button span');
+                        if (downloadButton && (downloadButton.textContent === '下载') && !(GM_getValue('listDownloadSkipReference', true) && contentDom.querySelector('div.reference'))) {
+                            const opusCard = contentDom.querySelector('[dyn-id]');
+                            // console.log(opusCard);
+                            if (opusCard) {
+                                const dynId = opusCard.getAttribute('dyn-id');
+                                // console.log(dynId);
+                                const downloadSuccess = await handleDynamicDownload(dynId, downloadButton);
+                                if (downloadSuccess) {
+                                    retryAttempts = 0;
+                                } else {
+                                    if (retryAttempts < GM_getValue('listDownloadRetryAttempsLimit', 3)) {
+                                        listDownloadingIndex -= 1;
+                                        retryAttempts += 1;
+                                    } else if (confirm(`出现错误${e.message}，已重试 ${retryAttempts} 次，还要继续吗？\n（“确定” —— 重试（一般是接口限制了，建议多等一会）；“取消” —— 停止）`)) {
+                                        listDownloadingIndex -= 1;
+                                    } else {
+                                        stopDownloadingList = true;
+                                    }
+                                }
+                                await sleep(GM_getValue('listDownloadSleepGapSeconds', 3));
+                            }
+                        }
+                        listDownloadingIndex += 1;
+                    } else {
+                        stopDownloadingList = true;
+                    }
+                } else {
+                    stopDownloadingList = true;
+                }
+            }
+            listDownloading = false;
+            stopDownloadingList = false;
+            retryAttempts = 0;
+            this.textContent = '下载当前瀑布流';
+            this.disabled = false;
+        } else if (listDownloading && !stopDownloadingList) {
+            stopDownloadingList = true;
+            this.textContent = '正在停止下载瀑布流……';
+        }
+    }
+
+    function addListDownloadButton() {
+        let listDownloadButton = document.createElement('button');
+        listDownloadButton.id = 'listDownloadButton';
+        listDownloadButton.textContent = '下载当前瀑布流';
+        listDownloadButton.style.position = 'fixed';
+        listDownloadButton.style.top = '6rem';
+        listDownloadButton.style.left = '0rem';
+        listDownloadButton.style.fontSize = '0.7rem';
+        listDownloadButton.style.backgroundColor = 'gray';
+        listDownloadButton.style.color = 'white';
+        listDownloadButton.style.borderWidth = '0.2rem';
+        listDownloadButton.style.borderStyle = 'solid';
+        listDownloadButton.style.borderRadius = '0.5rem';
+        listDownloadButton.style.borderColor = 'lightgrey';
+        listDownloadButton.style.zIndex = 400;
+        listDownloadButton.style.paddingLeft = '1rem';
+        listDownloadButton.style.paddingRight = '1rem';
+        listDownloadButton.style.paddingTop = '0.2rem';
+        listDownloadButton.style.paddingBottom = '0.2rem';
+        listDownloadButton.style.textAlign = 'center';
+        listDownloadButton.style.whiteSpace = 'pre';
+        listDownloadButton.style.lineHeight = '1.2rem';
+        listDownloadButton.style.display = 'none';
+        listDownloadButton.addEventListener('mouseover', function(event) {
+            listDownloadButton.style.backgroundColor = 'darkgray';
+            listDownloadButton.style.color = 'black';
+        });
+        listDownloadButton.addEventListener('mouseout', function(event) {
+            listDownloadButton.style.backgroundColor = 'gray';
+            listDownloadButton.style.color = 'white';
+        });
+        listDownloadButton.addEventListener('mousedown', function(event) {
+            listDownloadButton.style.backgroundColor = 'gray';
+            listDownloadButton.style.color = 'white';
+        });
+        listDownloadButton.addEventListener('mouseup', function(event) {
+            listDownloadButton.style.backgroundColor = 'darkgray';
+            listDownloadButton.style.color = 'black';
+        });
+        listDownloadButton.addEventListener('click', downloadList);
+        document.body.appendChild(listDownloadButton);
+    }
+
+    function showListDownloadButton() {
+        if ((window.location.host === 'space.bilibili.com' && window.location.pathname.match(/^\/\d+\/dynamic$/)) || (window.location.host === 't.bilibili.com')) {
+            const listDownloadButton = document.getElementById('listDownloadButton');
+            if (listDownloadButton) {
+                listDownloadButton.style.display = 'block';
+            }
+        } else {
+            const listDownloadButton = document.getElementById('listDownloadButton');
+            if (listDownloadButton) {
+                listDownloadButton.style.display = 'none';
+            }
+        }
+    }
+
+    const pushState = history.pushState;
+    const replaceState = history.replaceState;
+
+    history.pushState = function() {
+        pushState.apply(history, arguments);
+        // console.log('Pathname changed:', window.location);
+        showListDownloadButton();
+    };
+
+    history.replaceState = function() {
+        replaceState.apply(history, arguments);
+        // console.log('Pathname changed:', window.location);
+        showListDownloadButton();
+    };
+
+    addSettingButton();
+    addListDownloadButton();
+    showListDownloadButton();
 })();
