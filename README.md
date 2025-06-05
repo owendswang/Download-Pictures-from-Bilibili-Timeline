@@ -28,7 +28,7 @@ Or Install manually:
 - If opened for the first time, the 'Settings Panel' would show up. Change the settings as you like or leave it there as default. Press 'OK' to save your settings.  
   (If the 'Enable video download' setting changed, the page would reload to make it effective.)  
 ![Screenshot](res/1.PNG?raw=true)
-- The button to call out the settings panel is at the top-left corner on the webpage.  
+- The button to call out the settings panel and the button to auto download current timeline arge at the top-left corner on the webpage.  
 ![Screenshot](res/2.PNG?raw=true)
 - It's better to uncheck this settings of the web browser. Otherwise, it would keep popping up for saving location.  
 ![Screenshot](res/7.png?raw=true)
