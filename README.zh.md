@@ -1,8 +1,9 @@
 English Version: [README.md](README.md)
 
-# 从“Bilibili动态”页面下载图片
+# 从“Bilibili动态”页面下载图片和视频
 用于从“BiliBili动态”时间线页面上下载图片的Tampermonkey脚本，也可以在时间线和播放页面下载视频，但只能下载720P单文件MP4。
 可以在设置窗口里自定义下载的文件名。
+可以自动连续下载时间线动态中的图片和视频。
 
 ## 下载:
 - 前往[Greasy Fork](https://greasyfork.org/zh-CN/scripts/421885)。
@@ -26,7 +27,7 @@ English Version: [README.md](README.md)
   （如果改变了“开启视频下载”功能，会在保存设置时，自动刷新页面。）  
 ![截图](res/1.PNG?raw=true)
 - “设置”按钮在页面左上角。  
-![截图](res/2.png?raw=true)
+![截图](res/2.PNG?raw=true)
 - 最好关闭浏览器设置中的这个选项，不然下载多文件时，会不停弹出保存位置窗口。  
 ![截图](res/7.png?raw=true)
 
