@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Bilibili Download Pictures
 // @name:zh-CN   下载Bilibili动态页面图片
-// @version      1.1.0
+// @version      1.1.1
 // @description  Download pictures from bilibili timeline and 720P videos.
 // @description:zh-CN 下载“Bilibili动态”时间线页面的图片，也可下载视频（720P单文件）
 // @author       OWENDSWANG
@@ -1400,7 +1400,7 @@
             // GM_setValue('ariaRpcUrl', document.getElementById('ariaRpcUrl').value);
             GM_setValue('listDownloadSkipReference', document.getElementById('listDownloadSkipReference').checked);
             const listDownloadRetryAttempsLimitValue = document.getElementById('listDownloadRetryAttempsLimit').value;
-            GM_setValue('listDownloadRetryAttempsLimit', isNaN(Math.round(listDownloadRetryAttempsLimitValue) ? 3 : Math.round(listDownloadRetryAttempsLimitValue)));
+            GM_setValue('listDownloadRetryAttempsLimit', isNaN(Math.round(listDownloadRetryAttempsLimitValue)) ? 3 : Math.round(listDownloadRetryAttempsLimitValue));
             const listDownloadSleepGapSecondsValue = document.getElementById('listDownloadSleepGapSeconds').value;
             GM_setValue('listDownloadSleepGapSeconds', isNaN(Math.round(listDownloadSleepGapSecondsValue)) ? 2 : Math.round(listDownloadSleepGapSecondsValue));
             GM_setValue('isSet', settingVersion);
