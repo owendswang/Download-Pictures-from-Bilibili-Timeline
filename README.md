@@ -3,6 +3,7 @@
 # Download Pictures from Bilibili Timeline
 A Tampermonkey script to download pictures from Bilibili timeline. Also able to download videos from timeline and play page, but only in 720P as a single MP4 file.
 The filenames could be modified as you like in the settings pannel.
+Able to download from timeline one by one automatically.
 
 ## Download:
 - Go to [Greasy Fork](https://greasyfork.org/zh-CN/scripts/421885).
@@ -28,7 +29,7 @@ Or Install manually:
   (If the 'Enable video download' setting changed, the page would reload to make it effective.)  
 ![Screenshot](res/1.PNG?raw=true)
 - The button to call out the settings panel is at the top-left corner on the webpage.  
-![Screenshot](res/2.png?raw=true)
+![Screenshot](res/2.PNG?raw=true)
 - It's better to uncheck this settings of the web browser. Otherwise, it would keep popping up for saving location.  
 ![Screenshot](res/7.png?raw=true)
 
