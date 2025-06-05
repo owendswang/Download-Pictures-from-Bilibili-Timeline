@@ -1,6 +1,6 @@
 **中文介绍：[README.zh.md](README.zh.md)**
 
-# Download Pictures from Bilibili Timeline
+# Download Pictures and Videos from Bilibili Timeline
 A Tampermonkey script to download pictures from Bilibili timeline. Also able to download videos from timeline and play page, but only in 720P as a single MP4 file.
 The filenames could be modified as you like in the settings pannel.
 Able to download from timeline one by one automatically.
