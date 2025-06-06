@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Bilibili Download Pictures
 // @name:zh-CN   下载Bilibili动态页面图片
-// @version      1.1.1
+// @version      1.1.2
 // @description  Download pictures from bilibili timeline and 720P videos.
 // @description:zh-CN 下载“Bilibili动态”时间线页面的图片，也可下载视频（720P单文件）
 // @author       OWENDSWANG
@@ -35,7 +35,7 @@
     'use strict';
 
     // Your code here...
-    const settingVersion = 2;
+    const settingVersion = 3;
     const downloadIcon = 'url(\'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAUCAYAAACNiR0NAAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAALEgAACxIB0t1+/AAAABx0RVh0U29mdHdhcmUAQWRvYmUgRmlyZXdvcmtzIENTNui8sowAAAHpSURBVDiNndS7a1RREMfxz9XVrI8UIkjwLxCipYVp9A+wEQsV8dFksLCwUATxAYqNIAhWO4UPsAqCCGqTQkRQULEMgojYCSK+X4nhWty7uCZ3k5gfnObMOd8zM2dmirIs9SozV+IxNmCJZk3jObZGxFSvodVweD024TMm+wDb2Iy1eDsfcCkKHMSdPsB9uFKf/UdNwK4mI+J3kyEzp5r26Z8jTa8v5N5cwEWpCdgYZh/NOtuCzGyrQiwx+B/Awcz8ovrE6Yj42crMcYyoSqRdr/nULd6X+IFfWJaZYy1cwhA24j5u1t4+mAN4D0cwhb21Q89wtSjLUmauxm1sw56IGFtIvJm5H9dxFzsj4lfR23qZeQ0HcDEijs4Du4zD6ETEoe5+0el0zuNnURTnRkdHZeYpnMUt7JrZq5k5oErLdhyPiAuZuQyn8XEJTuBMWZbLISLOqVprB55k5roe2BCe1rDdEXGhNq3CSRxrqX73U68XEXEjM99gHBOZuUVVs4+wAiMR8bjnSolv+NC3UyLiIYZVU+cFJvARwzNg/6gLLDVUfUS8UpXTw3ptjIjXDZzpmlF2p02BdmbOmn8R8V1VTiAzmybUQM0oik6n81WVl/f9wvC3M4o+9kI1bD+08A5r6rVYlapcf/0DW06ifC1dVCUAAAAASUVORK5CYII=\')';
 
     let notLoaded = true;
@@ -556,14 +556,15 @@
                 default:
                     break;
             }
+            GM_setValue('blDl-' + dynId, true);
             if (downloadButton) {
-                downloadButton.textContent = '已完成';
+                downloadButton.textContent = '已下载';
             }
             return true;
         } catch(e) {
             console.error(e);
             if (downloadButton) {
-                downloadButton.textContent = '下载';
+                downloadButton.textContent = GM_getValue('blDl-' + dynId, false) ? '已下载' : '下载';
             }
             if (!listDownloading) alert('无法下载！');
             return false;
@@ -574,8 +575,9 @@
         if(card.getElementsByClassName('download-button').length == 0) {
             // console.log(card);
             const buttonBar = card.getElementsByClassName('bili-tabs__nav__items')[0];
+            const pageDynId = window.location.pathname.split('/')[window.location.pathname.split('/').length - 1];
             let downloadButton = document.createElement('div');
-            downloadButton.textContent = '下载';
+            downloadButton.textContent = GM_getValue('blDl-' + pageDynId, false) ? '已下载' : '下载';
             downloadButton.classList.add('bili-tabs__nav__item');
             downloadButton.addEventListener('click', async function(event) {
                 const dynId = window.location.pathname.split('/')[window.location.pathname.split('/').length - 1];
@@ -635,8 +637,13 @@
                 icon.style.backgroundRepeat = 'no-repeat';
                 icon.style.backgroundSize = '100% 100%';
                 icon.style.backgroundPosition = 'center';
+                const cardOpusCard = card.querySelector('div.bili-dyn-item__main [dyn-id]');
+                let cardDynId;
+                if (cardOpusCard) {
+                    cardDynId = cardOpusCard.getAttribute('dyn-id');
+                }
                 let text = document.createElement('span');
-                text.textContent = '下载';
+                text.textContent = (cardDynId && GM_getValue('blDl-' + cardDynId, false)) ? '已下载' : '下载';
                 span.appendChild(icon);
                 span.appendChild(text);
                 downloadButton.appendChild(span);
@@ -683,7 +690,12 @@
                 // console.log('add video dynamic download button');
                 const buttonBar = card.getElementsByClassName('bili-tabs__nav__items')[0];
                 let downloadButton = document.createElement('div');
-                downloadButton.textContent = '下载';
+                const cardOpusCard = card.querySelector('div.bili-dyn-item__main [dyn-id]');
+                let cardDynId;
+                if (cardOpusCard) {
+                    cardDynId = cardOpusCard.getAttribute('dyn-id');
+                }
+                downloadButton.textContent = (cardDynId && GM_getValue('blDl-' + cardDynId, false)) ? '已下载' : '下载';
                 downloadButton.classList.add('bili-tabs__nav__item');
                 downloadButton.addEventListener('click', async function(event) {
                     // console.log('click');
@@ -1166,6 +1178,7 @@
         labelListDownloadSkipReference.style.display = 'inline-block';
         labelListDownloadSkipReference.style.paddingRight = '0.2rem';
         labelListDownloadSkipReference.style.marginTop = '0.5rem';
+        labelListDownloadSkipReference.style.marginBottom = '0.5rem';
         question6.appendChild(labelListDownloadSkipReference);
         let inputListDownloadSkipReference = document.createElement('input');
         inputListDownloadSkipReference.type = 'checkbox';
@@ -1174,6 +1187,22 @@
         inputListDownloadSkipReference.style.marginTop = '0.5rem';
         inputListDownloadSkipReference.checked = GM_getValue('listDownloadSkipReference', true);
         question6.appendChild(inputListDownloadSkipReference);
+        question6.appendChild(document.createElement('br'));
+        let labelListDownloadSkipAlreadyDownloaded = document.createElement('label');
+        labelListDownloadSkipAlreadyDownloaded.setAttribute('for', 'listDownloadSkipAlreadyDownloaded');
+        labelListDownloadSkipAlreadyDownloaded.textContent = '跳过已下载';
+        labelListDownloadSkipAlreadyDownloaded.style.display = 'inline-block';
+        labelListDownloadSkipAlreadyDownloaded.style.paddingRight = '0.2rem';
+        labelListDownloadSkipAlreadyDownloaded.style.marginTop = '0.5rem';
+        labelListDownloadSkipAlreadyDownloaded.style.marginBottom = '0.5rem';
+        question6.appendChild(labelListDownloadSkipAlreadyDownloaded);
+        let inputListDownloadSkipAlreadyDownloaded = document.createElement('input');
+        inputListDownloadSkipAlreadyDownloaded.type = 'checkbox';
+        inputListDownloadSkipAlreadyDownloaded.id = 'listDownloadSkipAlreadyDownloaded';
+        inputListDownloadSkipAlreadyDownloaded.name = 'listDownloadSkipAlreadyDownloaded';
+        inputListDownloadSkipAlreadyDownloaded.style.marginTop = '0.5rem';
+        inputListDownloadSkipAlreadyDownloaded.checked = GM_getValue('listDownloadSkipAlreadyDownloaded', true);
+        question6.appendChild(inputListDownloadSkipAlreadyDownloaded);
         question6.appendChild(document.createElement('br'));
         let labelListDownloadSleepGapSeconds = document.createElement('label');
         labelListDownloadSleepGapSeconds.setAttribute('for', 'listDownloadSleepGapSeconds');
@@ -1399,6 +1428,7 @@
             // GM_setValue('ariaMode', document.getElementById('ariaMode').checked);
             // GM_setValue('ariaRpcUrl', document.getElementById('ariaRpcUrl').value);
             GM_setValue('listDownloadSkipReference', document.getElementById('listDownloadSkipReference').checked);
+            GM_setValue('listDownloadSkipAlreadyDownloaded', document.getElementById('listDownloadSkipAlreadyDownloaded').checked);
             const listDownloadRetryAttempsLimitValue = document.getElementById('listDownloadRetryAttempsLimit').value;
             GM_setValue('listDownloadRetryAttempsLimit', isNaN(Math.round(listDownloadRetryAttempsLimitValue)) ? 3 : Math.round(listDownloadRetryAttempsLimitValue));
             const listDownloadSleepGapSecondsValue = document.getElementById('listDownloadSleepGapSeconds').value;
@@ -1532,7 +1562,7 @@
                         contentDom.scrollIntoView();
                         // console.log(contentDom);
                         const downloadButton = contentDom.querySelector('div.download-button span');
-                        if (downloadButton && (downloadButton.textContent === '下载') && !(GM_getValue('listDownloadSkipReference', true) && contentDom.querySelector('div.reference'))) {
+                        if (downloadButton && ((downloadButton.textContent === '下载') || (!GM_getValue('listDownloadSkipAlreadyDownloaded', true) && (downloadButton.textContent === '已下载'))) && !(GM_getValue('listDownloadSkipReference', true) && contentDom.querySelector('div.reference'))) {
                             const opusCard = contentDom.querySelector('[dyn-id]');
                             // console.log(opusCard);
                             if (opusCard) {
@@ -1545,8 +1575,10 @@
                                     if (retryAttempts < GM_getValue('listDownloadRetryAttempsLimit', 3)) {
                                         listDownloadingIndex -= 1;
                                         retryAttempts += 1;
-                                    } else if (confirm(`出现错误${e.message}，已重试 ${retryAttempts} 次，还要继续吗？\n（“确定” —— 重试（一般是接口限制了，建议多等一会）；“取消” —— 停止）`)) {
-                                        listDownloadingIndex -= 1;
+                                    } else if (confirm(`出现错误${e.message}，已重试 ${retryAttempts} 次，还要继续吗？\n“确定” —— 跳过（一般是接口限制了，建议跳过，手动下载保存。B站真的很严格；\n“取消” —— 停止）`)) {
+                                        // listDownloadingIndex -= 1;
+                                        // retryAttempts += 1;
+                                        retryAttempts = 0;
                                     } else {
                                         stopDownloadingList = true;
                                     }
