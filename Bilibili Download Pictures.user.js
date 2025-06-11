@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Bilibili Download Pictures
 // @name:zh-CN   下载Bilibili动态页面图片
-// @version      1.1.2
+// @version      1.1.3
 // @description  Download pictures from bilibili timeline and 720P videos.
 // @description:zh-CN 下载“Bilibili动态”时间线页面的图片，也可下载视频（720P单文件）
 // @author       OWENDSWANG
@@ -224,7 +224,7 @@
                         if(downloadQueueCard.childElementCount == 1) downloadQueueTitle.style.display = 'none';
                     };
                     saveAs(response, name);
-                    resolve(null);
+                    resolve(true);
                 },
                 onabort: function(e) { console.log(e); resolve(null); },
                 onerror: function(e) { downloadError(e, url, name, progress); console.log(e); resolve(null); },
@@ -477,13 +477,26 @@
             ontimeout: function(e) { console.log(e); alert('下载超时！'); },
         });
         saveAs(blob, vidName);*/
-        await downloadWrapper(vidUrl, vidName);
+        return await downloadWrapper(vidUrl, vidName);
     }
 
-    async function handleVideoDownload(bvid) {
+    async function handleVideoDownload(bvid, buttonText) {
+        if (buttonText) {
+            buttonText.textContent = '下载中……';
+        }
         const vidInfoRes = await getVideoInfo(bvid);
         // console.log(vidInfoRes);
-        await downloadVideo(vidInfoRes.data);
+        const success = await downloadVideo(vidInfoRes.data);
+        if (success) {
+            GM_setValue('blDl-' + bvid, true);
+            if (buttonText) {
+                buttonText.textContent = '已下载';
+            }
+        } else {
+            if (buttonText) {
+                buttonText.textContent = '下载';
+            }
+        }
     }
 
     async function handleVideoDynamic(data) {
@@ -575,12 +588,17 @@
         if(card.getElementsByClassName('download-button').length == 0) {
             // console.log(card);
             const buttonBar = card.getElementsByClassName('bili-tabs__nav__items')[0];
-            const pageDynId = window.location.pathname.split('/')[window.location.pathname.split('/').length - 1];
+            const pageDynId = window.location.pathname.match(/BV[a-z|A-Z|0-9]{10}/g)[0];
+            const cardOpusCard = card.querySelector('div.bili-dyn-item__main [dyn-id]');
+            let cardBvid;
+            if (cardOpusCard && cardOpusCard.href && cardOpusCard.href.match(/BV[a-z|A-Z|0-9]{10}/g)) {
+                cardBvid = cardOpusCard.href.match(/BV[a-z|A-Z|0-9]{10}/g)[0];
+            }
             let downloadButton = document.createElement('div');
-            downloadButton.textContent = GM_getValue('blDl-' + pageDynId, false) ? '已下载' : '下载';
+            downloadButton.textContent = (GM_getValue('blDl-' + pageDynId, false) || (cardBvid && GM_getValue('blDl-' + cardBvid, false))) ? '已下载' : '下载';
             downloadButton.classList.add('bili-tabs__nav__item');
             downloadButton.addEventListener('click', async function(event) {
-                const dynId = window.location.pathname.split('/')[window.location.pathname.split('/').length - 1];
+                const dynId = window.location.pathname.match(/BV[a-z|A-Z|0-9]{10}/g)[0];
                 // console.log(dynId);
                 await handleDynamicDownload(dynId, this);
                 /*const content = document.body.querySelector('div.opus-module-content');
@@ -638,12 +656,15 @@
                 icon.style.backgroundSize = '100% 100%';
                 icon.style.backgroundPosition = 'center';
                 const cardOpusCard = card.querySelector('div.bili-dyn-item__main [dyn-id]');
-                let cardDynId;
+                let cardDynId, cardBvid;
                 if (cardOpusCard) {
                     cardDynId = cardOpusCard.getAttribute('dyn-id');
+                    if (cardOpusCard.href && cardOpusCard.href.match(/BV[a-z|A-Z|0-9]{10}/g)) {
+                        cardBvid = cardOpusCard.href.match(/BV[a-z|A-Z|0-9]{10}/g)[0];
+                    }
                 }
                 let text = document.createElement('span');
-                text.textContent = (cardDynId && GM_getValue('blDl-' + cardDynId, false)) ? '已下载' : '下载';
+                text.textContent = ((cardDynId && GM_getValue('blDl-' + cardDynId, false)) || (cardBvid && GM_getValue('blDl-' + cardBvid, false))) ? '已下载' : '下载';
                 span.appendChild(icon);
                 span.appendChild(text);
                 downloadButton.appendChild(span);
@@ -691,11 +712,14 @@
                 const buttonBar = card.getElementsByClassName('bili-tabs__nav__items')[0];
                 let downloadButton = document.createElement('div');
                 const cardOpusCard = card.querySelector('div.bili-dyn-item__main [dyn-id]');
-                let cardDynId;
+                let cardDynId, cardBvid;
                 if (cardOpusCard) {
                     cardDynId = cardOpusCard.getAttribute('dyn-id');
+                    if (cardOpusCard.href && cardOpusCard.href.match(/BV[a-z|A-Z|0-9]{10}/g)) {
+                        cardBvid = cardOpusCard.href.match(/BV[a-z|A-Z|0-9]{10}/g)[0];
+                    }
                 }
-                downloadButton.textContent = (cardDynId && GM_getValue('blDl-' + cardDynId, false)) ? '已下载' : '下载';
+                downloadButton.textContent = ((cardDynId && GM_getValue('blDl-' + cardDynId, false)) || (cardBvid && GM_getValue('blDl-' + cardBvid, false))) ? '已下载' : '下载';
                 downloadButton.classList.add('bili-tabs__nav__item');
                 downloadButton.addEventListener('click', async function(event) {
                     // console.log('click');
@@ -745,7 +769,8 @@
         icon.style.backgroundSize = '100% 100%';
         icon.style.backgroundPosition = 'center';
         let text = document.createElement('span');
-        text.textContent = '下载';
+        const pageBvid = window.location.pathname.match(/BV[a-z|A-Z|0-9]{10}/g)[0];
+        text.textContent = GM_getValue('blDl-' + pageBvid, false) ? '已下载' : '下载';
         button.appendChild(icon);
         button.appendChild(text);
         buttonWrap.appendChild(button);
@@ -755,7 +780,7 @@
             event.preventDefault();
             const bvid = window.location.pathname.match(/BV[a-z|A-Z|0-9]{10}/g)[0];
             // console.log(bvid);
-            handleVideoDownload(bvid);
+            handleVideoDownload(bvid, this.querySelector('span'));
         });
     }
 
@@ -1583,10 +1608,10 @@
                                         stopDownloadingList = true;
                                     }
                                 }
-                                await sleep(GM_getValue('listDownloadSleepGapSeconds', 3));
                             }
                         }
                         listDownloadingIndex += 1;
+                        await sleep(GM_getValue('listDownloadSleepGapSeconds', 3));
                     } else {
                         stopDownloadingList = true;
                     }
