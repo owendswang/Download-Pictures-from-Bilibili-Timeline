@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Bilibili Download Pictures
 // @name:zh-CN   下载Bilibili动态页面图片
-// @version      1.1.4
+// @version      1.1.5
 // @description  Download pictures from bilibili timeline and 720P videos.
 // @description:zh-CN 下载“Bilibili动态”时间线页面的图片，也可下载视频（720P单文件）
 // @author       OWENDSWANG
@@ -19,6 +19,7 @@
 // @connect      bilivideo.cn
 // @connect      hdslb.com
 // @connect      biliimg.com
+// @connect      akamaized.net
 // @grant        GM_download
 // @grant        GM_xmlhttpRequest
 // @grant        GM_getValue
@@ -35,7 +36,7 @@
     'use strict';
 
     // Your code here...
-    const settingVersion = 3;
+    const settingVersion = 4;
     const downloadIcon = 'url(\'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAUCAYAAACNiR0NAAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAALEgAACxIB0t1+/AAAABx0RVh0U29mdHdhcmUAQWRvYmUgRmlyZXdvcmtzIENTNui8sowAAAHpSURBVDiNndS7a1RREMfxz9XVrI8UIkjwLxCipYVp9A+wEQsV8dFksLCwUATxAYqNIAhWO4UPsAqCCGqTQkRQULEMgojYCSK+X4nhWty7uCZ3k5gfnObMOd8zM2dmirIs9SozV+IxNmCJZk3jObZGxFSvodVweD024TMm+wDb2Iy1eDsfcCkKHMSdPsB9uFKf/UdNwK4mI+J3kyEzp5r26Z8jTa8v5N5cwEWpCdgYZh/NOtuCzGyrQiwx+B/Awcz8ovrE6Yj42crMcYyoSqRdr/nULd6X+IFfWJaZYy1cwhA24j5u1t4+mAN4D0cwhb21Q89wtSjLUmauxm1sw56IGFtIvJm5H9dxFzsj4lfR23qZeQ0HcDEijs4Du4zD6ETEoe5+0el0zuNnURTnRkdHZeYpnMUt7JrZq5k5oErLdhyPiAuZuQyn8XEJTuBMWZbLISLOqVprB55k5roe2BCe1rDdEXGhNq3CSRxrqX73U68XEXEjM99gHBOZuUVVs4+wAiMR8bjnSolv+NC3UyLiIYZVU+cFJvARwzNg/6gLLDVUfUS8UpXTw3ptjIjXDZzpmlF2p02BdmbOmn8R8V1VTiAzmybUQM0oik6n81WVl/f9wvC3M4o+9kI1bD+08A5r6rVYlapcf/0DW06ifC1dVCUAAAAASUVORK5CYII=\')';
 
     let notLoaded = true;
@@ -454,6 +455,8 @@
         // console.log(vidRes);
         const vidUrl = vidRes.data.durl[0].url;
         // console.log(vidUrl);
+        const videoTimeLength = vidRes.data.timelength; // in microseconds;
+        // if (listDownloading && GM_getValue('listDownloadEnableSkipVidLength', false) && ((videoTimeLength / 1000) > GM_getValue('listDownloadSkipVidLength', 60))) return null;
         const originalName = vidUrl.split('?')[0].split('/')[vidUrl.split('?')[0].split('/').length - 1];
         const vidName = getVidName(GM_getValue('dlVidName', '{original}.{ext}'), originalName, data);
         // console.log(vidName);
@@ -502,7 +505,7 @@
     async function handleVideoDynamic(data) {
         // console.log('handleVideoDynamic');
         // console.log(data);
-        // const card = JSON.parse(data.card.card);
+        const card = JSON.parse(data.card.card);
         // const aid = card.aid;
         // const cid = card.cid;
         // console.log(aid, cid);
@@ -510,6 +513,10 @@
         // const cookies = 'SESSDATA=' + await getCookie('SESSDATA');
         // console.log(cookies);
         // await downloadVideo(aid, cid);
+        const videoTimeLength = card.duration;
+        if (listDownloading && GM_getValue('listDownloadEnableSkipVidLength', false) && (videoTimeLength > GM_getValue('listDownloadSkipVidLength', 60))) {
+            return true;
+        }
         const bvid = data.card.desc.bvid;
         await handleVideoDownload(bvid);
     }
@@ -539,6 +546,7 @@
         }
         // console.log('handleDynamicDownload: ' + dynId);
         try {
+            let skipped;
             const dynRes = await getDynamicDetail(dynId);
             // console.log(dynRes.data);
             const card = JSON.parse(dynRes.data.card.card);
@@ -549,7 +557,7 @@
                 case 2:
                     // 图片
                     // console.log('picture');
-                    await handleImageDynamic(dynRes.data);
+                    skipped = await handleImageDynamic(dynRes.data);
                     break;
                 case 4:
                     // 文字
@@ -557,11 +565,11 @@
                 case 8:
                     // 视频
                     // console.log('video');
-                    await handleVideoDynamic(dynRes.data);
+                    skipped = await handleVideoDynamic(dynRes.data);
                     break;
                 case 64:
                     // 专栏
-                    await handleArticleDynamic(dynRes.data);
+                    skipped = await handleArticleDynamic(dynRes.data);
                     break;
                 case 256:
                     // 音频
@@ -569,9 +577,15 @@
                 default:
                     break;
             }
-            GM_setValue('blDl-' + dynId, true);
+            if (!skipped) {
+                GM_setValue('blDl-' + dynId, true);
+            }
             if (downloadButton) {
-                downloadButton.textContent = '已下载';
+                if (!skipped) {
+                    downloadButton.textContent = '已下载';
+                } else {
+                    downloadButton.textContent = '下载';
+                }
             }
             return true;
         } catch(e) {
@@ -1280,11 +1294,49 @@
         let listDownloadRetryAttempsLimitExplain = document.createElement('p');
         listDownloadRetryAttempsLimitExplain.innerHTML = '连续的下载可能会触发API请求限制而报错，\n此项设置遇到报错后自动重试的次数。';
         listDownloadRetryAttempsLimitExplain.style.marginTop = '0.5rem';
-        listDownloadRetryAttempsLimitExplain.style.marginBottom = '0';
+        listDownloadRetryAttempsLimitExplain.style.marginBottom = '0.5rem';
         listDownloadRetryAttempsLimitExplain.style.whiteSpace = 'pre';
         listDownloadRetryAttempsLimitExplain.style.color = 'gray';
         listDownloadRetryAttempsLimitExplain.style.lineHeight = '1.1rem';
         question6.appendChild(listDownloadRetryAttempsLimitExplain);
+        let labelListDownloadEnableSkipVidLength = document.createElement('label');
+        labelListDownloadEnableSkipVidLength.setAttribute('for', 'listDownloadEnableSkipVidLength');
+        labelListDownloadEnableSkipVidLength.textContent = '跳过过长的视频';
+        labelListDownloadEnableSkipVidLength.style.display = 'inline-block';
+        labelListDownloadEnableSkipVidLength.style.paddingRight = '0.2rem';
+        labelListDownloadEnableSkipVidLength.style.marginTop = '0.5rem';
+        labelListDownloadEnableSkipVidLength.style.marginBottom = '0.5rem';
+        question6.appendChild(labelListDownloadEnableSkipVidLength);
+        let inputListDownloadEnableSkipVidLength = document.createElement('input');
+        inputListDownloadEnableSkipVidLength.type = 'checkbox';
+        inputListDownloadEnableSkipVidLength.id = 'listDownloadEnableSkipVidLength';
+        inputListDownloadEnableSkipVidLength.name = 'listDownloadEnableSkipVidLength';
+        inputListDownloadEnableSkipVidLength.style.marginTop = '0.5rem';
+        inputListDownloadEnableSkipVidLength.checked = GM_getValue('listDownloadEnableSkipVidLength', false);
+        question6.appendChild(inputListDownloadEnableSkipVidLength);
+        question6.appendChild(document.createElement('br'));
+        let labelListDownloadSkipVidLength = document.createElement('label');
+        labelListDownloadSkipVidLength.setAttribute('for', 'listDownloadSkipVidLength');
+        labelListDownloadSkipVidLength.textContent = '跳过超过多少秒的视频';
+        labelListDownloadSkipVidLength.style.display = 'inline-block';
+        labelListDownloadSkipVidLength.style.paddingRight = '0.2rem';
+        labelListDownloadSkipVidLength.style.marginTop = '0.5rem';
+        labelListDownloadSkipVidLength.style.color = GM_getValue('listDownloadEnableSkipVidLength', false) ? null : 'gray';
+        question6.appendChild(labelListDownloadSkipVidLength);
+        let inputListDownloadSkipVidLength = document.createElement('input');
+        inputListDownloadSkipVidLength.type = 'number';
+        inputListDownloadSkipVidLength.id = 'listDownloadSkipVidLength';
+        inputListDownloadSkipVidLength.name = 'listDownloadSkipVidLength';
+        inputListDownloadSkipVidLength.style.marginTop = '0.5rem';
+        inputListDownloadSkipVidLength.style.width = '3rem';
+        inputListDownloadSkipVidLength.style.padding = '0.1rem 0.2rem 0.1rem 0.2rem';
+        inputListDownloadSkipVidLength.style.borderStyle = 'solid';
+        inputListDownloadSkipVidLength.style.borderWidth = '0.14rem';
+        inputListDownloadSkipVidLength.style.borderRadius = '0.2rem';
+        inputListDownloadSkipVidLength.style.borderColor = GM_getValue('listDownloadEnableSkipVidLength', false) ? 'gray' : 'lightgray';
+        inputListDownloadSkipVidLength.defaultValue = GM_getValue('listDownloadSkipVidLength', 60);
+        inputListDownloadSkipVidLength.disabled = GM_getValue('listDownloadEnableSkipVidLength', false) ? false : true;
+        question6.appendChild(inputListDownloadSkipVidLength);
         modal.appendChild(question6);
 
         /*inputRetweetMode.addEventListener('change', function(event) {
@@ -1397,6 +1449,18 @@
             }
         });
 
+        inputListDownloadEnableSkipVidLength.addEventListener('change', function(event) {
+            if (event.currentTarget.checked) {
+                labelListDownloadSkipVidLength.style.color = null;
+                inputListDownloadSkipVidLength.disabled = false;
+                inputListDownloadSkipVidLength.style.borderColor = 'gray';
+            } else {
+                labelListDownloadSkipVidLength.style.color = 'gray';
+                inputListDownloadSkipVidLength.disabled = true;
+                inputListDownloadSkipVidLength.style.borderColor = 'lightgray';
+            }
+        });
+
         let okButton = document.createElement('button');
         okButton.textContent = '确定';
         okButton.style.paddingTop = '0.5rem';
@@ -1458,6 +1522,9 @@
             GM_setValue('listDownloadRetryAttempsLimit', isNaN(Math.round(listDownloadRetryAttempsLimitValue)) ? 3 : Math.round(listDownloadRetryAttempsLimitValue));
             const listDownloadSleepGapSecondsValue = document.getElementById('listDownloadSleepGapSeconds').value;
             GM_setValue('listDownloadSleepGapSeconds', isNaN(Math.round(listDownloadSleepGapSecondsValue)) ? 2 : Math.round(listDownloadSleepGapSecondsValue));
+            GM_setValue('listDownloadEnableSkipVidLength', document.getElementById('listDownloadEnableSkipVidLength').checked);
+            const listDownloadSkipVidLengthValue = document.getElementById('listDownloadSkipVidLength').value;
+            GM_setValue('listDownloadSkipVidLength', isNaN(Math.round(listDownloadSkipVidLengthValue)) ? 60 : Math.round(listDownloadSkipVidLengthValue));
             GM_setValue('isSet', settingVersion);
             if (refreshFlag) {
                 alert('已' + (document.getElementById('enableVideoDownload').checked ? '开启' : '关闭') + '视频下载功能，将在页面刷新后生效。');
@@ -1676,7 +1743,7 @@
     }
 
     function showListDownloadButton() {
-        if ((window.location.host === 'space.bilibili.com' && window.location.pathname.match(/^\/\d+\/dynamic$/)) || (window.location.host === 't.bilibili.com')) {
+        if (((window.location.host === 'space.bilibili.com') && window.location.pathname.match(/^\/\d+\/dynamic$/)) || ((window.location.host === 't.bilibili.com') && (window.location.pathname === '/'))) {
             const listDownloadButton = document.getElementById('listDownloadButton');
             if (listDownloadButton) {
                 listDownloadButton.style.display = 'block';
