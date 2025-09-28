@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Bilibili Download Pictures
 // @name:zh-CN   下载Bilibili动态页面图片
-// @version      1.1.6
+// @version      1.1.7
 // @description  Download pictures from bilibili timeline and 720P videos.
 // @description:zh-CN 下载“Bilibili动态”时间线页面的图片，也可下载视频（720P单文件）
 // @author       OWENDSWANG
@@ -1577,7 +1577,7 @@
                     }
                 } else if (GM_getValue('enableVideoDownload', false) && mutation.target.tagName === 'BODY') {
                     for (const node of mutation.addedNodes) {
-                        if (node.nodeType === 1 && node.tagName === 'DIV' && node.classList.contains('lt-row')) {
+                        if (node.nodeType === 1 && node.tagName === 'DIV'/* && node.classList.contains('lt-row')*/) {
                             // console.log(mutation);
                             const buttonBar = document.body.querySelector('div.video-toolbar-left-main');
                             if (buttonBar && !buttonBar.querySelector('div.download-button')) {
