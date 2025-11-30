@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Bilibili Download Pictures
 // @name:zh-CN   下载Bilibili动态页面图片
-// @version      1.1.9
+// @version      1.1.10-pre
 // @description  Download pictures from bilibili timeline and 720P videos.
 // @description:zh-CN 下载“Bilibili动态”时间线页面的图片，也可下载视频（720P单文件）
 // @author       OWENDSWANG
@@ -294,13 +294,15 @@
 
     function getPicName(nameSetting, originalName, index, data) {
         const card = JSON.parse(data.card.card);
+        // console.log(card);
         let setName = nameSetting;
         setName = setName.replace('{original}', originalName.split('.')[0]);
         setName = setName.replace('{ext}', originalName.split('.')[1]);
         const userName = card.user?.name || data.card.desc.user_profile.info.uname;
         const userId = card.user?.uid || data.card.desc.user_profile.info.uid;
         const dynamicId = data.card.desc.dynamic_id_str;
-        const content = card.item?.description || card.title;
+        const content = card.item?.description || card.title || '';
+        // console.log("content: ", content);
         setName = setName.replace('{username}', userName);
         setName = setName.replace('{userid}', userId);
         setName = setName.replace('{dynamicid}', dynamicId);
@@ -548,7 +550,11 @@
         // console.log('handleDynamicDownload: ' + dynId);
         try {
             let skipped;
-            const dynRes = await getDynamicDetail(dynId);
+            let dynRes = await getDynamicDetail(dynId);
+            // console.log(dynRes.data);
+            if (dynRes.data.card.desc.orig_dy_id) {
+                dynRes = await getDynamicDetail(dynRes.data.card.desc.orig_dy_id_str);
+            }
             // console.log(dynRes.data);
             const card = JSON.parse(dynRes.data.card.card);
             switch(dynRes.data.card.desc.type) {
@@ -603,17 +609,15 @@
         if(card.getElementsByClassName('download-button').length == 0) {
             // console.log(card);
             const buttonBar = card.getElementsByClassName('bili-tabs__nav__items')[0];
-            const pageDynId = window.location.pathname.match(/BV[a-z|A-Z|0-9]{10}/) ? window.location.pathname.match(/BV[a-z|A-Z|0-9]{10}/)[0] : window.location.pathname.match(/^\/opus\/(\d+)$/)[1];
-            const cardOpusCard = card.querySelector('div.bili-dyn-item__main [dyn-id]');
-            let cardBvid;
-            if (cardOpusCard && cardOpusCard.href && cardOpusCard.href.match(/BV[a-z|A-Z|0-9]{10}/g)) {
-                cardBvid = cardOpusCard.href.match(/BV[a-z|A-Z|0-9]{10}/g)[0];
-            }
+            const pageDynId = (window.location.pathname.match(/BV[a-zA-Z0-9]{10}/)?.[0]) || (window.location.pathname.match(/^\/opus\/(\d+)$/)?.[1]) || (window.location.pathname.match(/^\/\d+$/)?.[0]);
+            // console.log('pageDynId: ', pageDynId);
+            const cardOpusCard = card.querySelector('div.bili-dyn-item__main');
+            const videoCard = cardOpusCard.querySelector('a.bili-dyn-card-video');
             let downloadButton = document.createElement('div');
-            downloadButton.textContent = (GM_getValue('blDl-' + pageDynId, false) || (cardBvid && GM_getValue('blDl-' + cardBvid, false))) ? '已下载' : '下载';
+            downloadButton.textContent = GM_getValue('blDl-' + pageDynId, false) ? '已下载' : '下载';
             downloadButton.classList.add('bili-tabs__nav__item');
             downloadButton.addEventListener('click', async function(event) {
-                const dynId = window.location.pathname.match(/BV[a-z|A-Z|0-9]{10}/) ? window.location.pathname.match(/BV[a-z|A-Z|0-9]{10}/)[0] : window.location.pathname.match(/^\/opus\/(\d+)$/)[1];
+                const dynId = (window.location.pathname.match(/BV[a-zA-Z0-9]{10}/)?.[0]) || (window.location.pathname.match(/^\/opus\/(\d+)$/)?.[1]) || (window.location.pathname.match(/^\/\d+$/)?.[0]);
                 // console.log(dynId);
                 await handleDynamicDownload(dynId, this);
                 /*const content = document.body.querySelector('div.opus-module-content');
@@ -652,7 +656,7 @@
     }
 
     function addDownloadButton(card) {
-        // console.log('addDownloadButton');
+        // console.log('addDownloadButton', card);
         if(card.getElementsByClassName('download-button').length == 0) {
             if(card.getElementsByClassName('bili-dyn-item__footer').length > 0) {
                 card.querySelectorAll('div.bili-dyn-item__footer > div.bili-dyn-item__action').forEach((ele) => { ele.style.marginRight = '48px'; });
@@ -670,14 +674,29 @@
                 icon.style.backgroundRepeat = 'no-repeat';
                 icon.style.backgroundSize = '100% 100%';
                 icon.style.backgroundPosition = 'center';
-                const cardOpusCard = card.querySelector('div.bili-dyn-item__main [dyn-id]');
+                const cardComm = card.querySelector('div.bili-dyn-item__footer div.bili-dyn-action.comment');
+                // console.log("cardComm: ", cardComm);
+                const opusCard = card.querySelector('div.dyn-card-opus');
+                // console.log("opusCard: ", opusCard);
+                const videoCard = card.querySelector('a.bili-dyn-card-video');
+                // console.log("videoCard: ", videoCard);
                 let cardDynId, cardBvid;
-                if (cardOpusCard) {
-                    cardDynId = cardOpusCard.getAttribute('dyn-id');
-                    if (cardOpusCard.href && cardOpusCard.href.match(/BV[a-z|A-Z|0-9]{10}/g)) {
-                        cardBvid = cardOpusCard.href.match(/BV[a-z|A-Z|0-9]{10}/g)[0];
+                if (opusCard) {
+                    cardDynId = opusCard.$log?.click.value.card_id;
+                    if (!cardDynId) {
+                        const descTitle = opusCard.querySelector("div[data-url]");
+                        // console.log("descTitle: ", descTitle);
+                        if (descTitle) {
+                            cardDynId = descTitle.getAttribute("data-url").match(/\/(\d+)$/)?.[1];
+                        } else {
+                            cardDynId = cardComm.$log?.click.value.card_id;
+                        }
                     }
+                } else if (videoCard) {
+                    cardDynId = videoCard.$log?.click.value.card_id;
+                    cardBvid = videoCard.href.match(/BV[a-z|A-Z|0-9]{10}/g)[0];
                 }
+                // console.log("cardDynId: ", cardDynId, ", cardBvid: ", cardBvid);
                 let text = document.createElement('span');
                 text.textContent = ((cardDynId && GM_getValue('blDl-' + cardDynId, false)) || (cardBvid && GM_getValue('blDl-' + cardBvid, false))) ? '已下载' : '下载';
                 span.appendChild(icon);
@@ -698,9 +717,17 @@
                     event.preventDefault();
                     const content = this.closest('div.bili-dyn-item__main');
                     // console.log(content);
-                    const opusCard = content.querySelector('[dyn-id]');
-                    // console.log(opusCard.getAttribute('dyn-id'));
-                    const dynId = opusCard.getAttribute('dyn-id');
+                    const opusCard = content.querySelector('div.dyn-card-opus');
+                    // console.log("opusCard: ", opusCard);
+                    const videoCard = content.querySelector('a.bili-dyn-card-video');
+                    // console.log(videoCard);
+                    let dynId;
+                    if (opusCard) {
+                        dynId = opusCard.$log?.click.value.card_id;
+                    } else if (videoCard) {
+                        dynId = videoCard.$log?.click.value.card_id;
+                    }
+                    // console.log("dynamic id: ", dynId);
                     await handleDynamicDownload(dynId, this.querySelector('span'));
                     /*const list = content.querySelectorAll('div.bili-album__preview__picture,div.preview__picture__img.b-img');
                     // console.log(list);
@@ -726,13 +753,16 @@
                 // console.log('add video dynamic download button');
                 const buttonBar = card.getElementsByClassName('bili-tabs__nav__items')[0];
                 let downloadButton = document.createElement('div');
-                const cardOpusCard = card.querySelector('div.bili-dyn-item__main [dyn-id]');
+                const opusCard = card.querySelector('div.dyn-card-opus');
+                // console.log("opusCard: ", opusCard);
+                const videoCard = card.querySelector('a.bili-dyn-card-video');
+                // console.log(videoCard);
                 let cardDynId, cardBvid;
-                if (cardOpusCard) {
-                    cardDynId = cardOpusCard.getAttribute('dyn-id');
-                    if (cardOpusCard.href && cardOpusCard.href.match(/BV[a-z|A-Z|0-9]{10}/g)) {
-                        cardBvid = cardOpusCard.href.match(/BV[a-z|A-Z|0-9]{10}/g)[0];
-                    }
+                if (opusCard) {
+                    cardDynId = opusCard.$log?.click.value.card_id;
+                } else if (videoCard) {
+                    cardDynId = videoCard.$log?.click.value.card_id;
+                    cardBvid = videoCard.href.match(/BV[a-z|A-Z|0-9]{10}/g)[0];
                 }
                 downloadButton.textContent = ((cardDynId && GM_getValue('blDl-' + cardDynId, false)) || (cardBvid && GM_getValue('blDl-' + cardBvid, false))) ? '已下载' : '下载';
                 downloadButton.classList.add('bili-tabs__nav__item');
@@ -741,9 +771,16 @@
                     event.preventDefault();
                     const content = this.closest('div.card');
                     // console.log(content);
-                    const opusCard = content.querySelector('[dyn-id]');
-                    // console.log(opusCard.getAttribute('dyn-id'));
-                    const dynId = opusCard.getAttribute('dyn-id');
+                    const opusCard = content.querySelector('div.dyn-card-opus');
+                    // console.log("opusCard: ", opusCard);
+                    const videoCard = content.querySelector('a.bili-dyn-card-video');
+                    // console.log(videoCard);
+                    let dynId;
+                    if (opusCard) {
+                        dynId = opusCard.$log?.click.value.card_id;
+                    } else if (videoCard) {
+                        dynId = videoCard.$log?.click.value.card_id;
+                    }
                     await handleDynamicDownload(dynId, this);
                     /*const list = content.querySelectorAll('div.bili-album__preview__picture,div.preview__picture__img.b-img');
                     // console.log(list);
@@ -1562,7 +1599,7 @@
                 /*for (const node of mutation.addedNodes) {
                     // console.log(node.nodeType, node);
                     if (node.nodeType === 1 && Object.keys(mutation.target.getElementsByClassName('video-like')).length > 0) {
-                        console.log(mutation.target, node);
+                        // console.log(mutation.target, node);
                     }
                 }*/
                 if (mutation.target.tagName === 'DIV' && ['bili-dyn-list__items', 'content'].includes(mutation.target.className)) {
@@ -1584,7 +1621,7 @@
                             const buttonBar = document.body.querySelector('div.video-toolbar-left-main');
                             mutationCount += 1;
                             // console.log(mutationCount);
-                            if (mutationCount === 10 && buttonBar && !buttonBar.querySelector('div.download-button')) {
+                            if (mutationCount === 9 && buttonBar && !buttonBar.querySelector('div.download-button')) {
                                 // console.log(mutation);
                                 addPlayPageDownloadButton(buttonBar);
                             }
@@ -1659,11 +1696,18 @@
                         // console.log(contentDom);
                         const downloadButton = contentDom.querySelector('div.download-button span');
                         if (downloadButton && ((downloadButton.textContent === '下载') || (!GM_getValue('listDownloadSkipAlreadyDownloaded', true) && (downloadButton.textContent === '已下载'))) && !(GM_getValue('listDownloadSkipReference', true) && contentDom.querySelector('div.reference'))) {
-                            const opusCard = contentDom.querySelector('[dyn-id]');
-                            // console.log(opusCard);
+                            const opusCard = contentDom.querySelector('div.dyn-card-opus');
+                            // console.log("opusCard: ", opusCard);
+                            const videoCard = contentDom.querySelector('a.bili-dyn-card-video');
+                            // console.log(videoCard);
+                            let dynId;
                             if (opusCard) {
-                                const dynId = opusCard.getAttribute('dyn-id');
-                                // console.log(dynId);
+                                dynId = opusCard.$log?.click.value.card_id;
+                            } else if (videoCard) {
+                                dynId = videoCard.$log?.click.value.card_id;
+                            }
+                            // console.log(dynId);
+                            if (dynId) {
                                 const downloadSuccess = await handleDynamicDownload(dynId, downloadButton);
                                 if (downloadSuccess) {
                                     retryAttempts = 0;
