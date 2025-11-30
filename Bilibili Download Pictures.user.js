@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Bilibili Download Pictures
 // @name:zh-CN   下载Bilibili动态页面图片
-// @version      1.1.10-pre
+// @version      1.1.11
 // @description  Download pictures from bilibili timeline and 720P videos.
 // @description:zh-CN 下载“Bilibili动态”时间线页面的图片，也可下载视频（720P单文件）
 // @author       OWENDSWANG
@@ -655,6 +655,36 @@
         }
     }
 
+    function checkDynDownloaded(card) {
+        // console.log('checkDynDownloaded: ', card);
+        const opusCard = card.querySelector('div.dyn-card-opus');
+        // console.log("opusCard: ", opusCard);
+        const videoCard = card.querySelector('a.bili-dyn-card-video');
+        // console.log("videoCard: ", videoCard);
+        let dynId, BvId;
+        if (opusCard) {
+            dynId = opusCard.$log?.click.value.card_id || opusCard.$log?.show.value.card_id;
+        }
+        if (videoCard) {
+            BvId = videoCard.href.match(/BV[a-z|A-Z|0-9]{10}/g)[0];
+        }
+        // console.log('dynId: ', dynId, ', BvId: ', BvId);
+        if (dynId || BvId) {
+            const downloadBtnTextEle = card.querySelector('div.bili-dyn-item__footer > div.bili-dyn-item__action.download-button > div.bili-dyn-action > span') || card.querySelector('div.bili-tabs__nav__items div.bili-tabs__nav__item.download-button');
+            if (downloadBtnTextEle && (downloadBtnTextEle !== '已下载') && (GM_getValue('blDl-' + dynId, false) || GM_getValue('blDl-' + BvId, false))) {
+                downloadBtnTextEle.textContent = '已下载';
+                return true;
+            }
+        }
+        return false;
+    }
+
+    function checkDynDownloadedHandler(event) {
+        const card = event.target;
+        checkDynDownloaded(card);
+        card.removeEventListener('mouseenter', checkDynDownloaded);
+    }
+
     function addDownloadButton(card) {
         // console.log('addDownloadButton', card);
         if(card.getElementsByClassName('download-button').length == 0) {
@@ -674,27 +704,16 @@
                 icon.style.backgroundRepeat = 'no-repeat';
                 icon.style.backgroundSize = '100% 100%';
                 icon.style.backgroundPosition = 'center';
-                const cardComm = card.querySelector('div.bili-dyn-item__footer div.bili-dyn-action.comment');
-                // console.log("cardComm: ", cardComm);
-                const opusCard = card.querySelector('div.dyn-card-opus');
-                // console.log("opusCard: ", opusCard);
                 const videoCard = card.querySelector('a.bili-dyn-card-video');
                 // console.log("videoCard: ", videoCard);
+                const descTitle = card.querySelector("div.dyn-card-opus div[data-url]");
+                // console.log("descTitle: ", descTitle);
                 let cardDynId, cardBvid;
-                if (opusCard) {
-                    cardDynId = opusCard.$log?.click.value.card_id;
-                    if (!cardDynId) {
-                        const descTitle = opusCard.querySelector("div[data-url]");
-                        // console.log("descTitle: ", descTitle);
-                        if (descTitle) {
-                            cardDynId = descTitle.getAttribute("data-url").match(/\/(\d+)$/)?.[1];
-                        } else {
-                            cardDynId = cardComm.$log?.click.value.card_id;
-                        }
-                    }
-                } else if (videoCard) {
-                    cardDynId = videoCard.$log?.click.value.card_id;
+                if (videoCard) {
                     cardBvid = videoCard.href.match(/BV[a-z|A-Z|0-9]{10}/g)[0];
+                }
+                if (descTitle) {
+                    cardDynId = descTitle.getAttribute("data-url").match(/\/(\d+)$/)?.[1];
                 }
                 // console.log("cardDynId: ", cardDynId, ", cardBvid: ", cardBvid);
                 let text = document.createElement('span');
@@ -749,23 +768,24 @@
                         }
                     }*/
                 });
+                card.addEventListener('mouseenter', checkDynDownloadedHandler);
             } else if(GM_getValue('enableVideoDownload', false) && card.getElementsByClassName('bili-tabs__nav__items').length > 0) {
                 // console.log('add video dynamic download button');
                 const buttonBar = card.getElementsByClassName('bili-tabs__nav__items')[0];
                 let downloadButton = document.createElement('div');
-                const opusCard = card.querySelector('div.dyn-card-opus');
-                // console.log("opusCard: ", opusCard);
                 const videoCard = card.querySelector('a.bili-dyn-card-video');
                 // console.log(videoCard);
+                const descTitle = card.querySelector("div.dyn-card-opus div[data-url]");
+                // console.log("descTitle: ", descTitle);
                 let cardDynId, cardBvid;
-                if (opusCard) {
-                    cardDynId = opusCard.$log?.click.value.card_id;
-                } else if (videoCard) {
-                    cardDynId = videoCard.$log?.click.value.card_id;
+                if (videoCard) {
                     cardBvid = videoCard.href.match(/BV[a-z|A-Z|0-9]{10}/g)[0];
                 }
+                if (descTitle) {
+                    cardDynId = descTitle.getAttribute("data-url").match(/\/(\d+)$/)?.[1];
+                }
                 downloadButton.textContent = ((cardDynId && GM_getValue('blDl-' + cardDynId, false)) || (cardBvid && GM_getValue('blDl-' + cardBvid, false))) ? '已下载' : '下载';
-                downloadButton.classList.add('bili-tabs__nav__item');
+                downloadButton.classList.add('bili-tabs__nav__item', 'download-button');
                 downloadButton.addEventListener('click', async function(event) {
                     // console.log('click');
                     event.preventDefault();
@@ -803,6 +823,7 @@
                     }*/
                 });
                 buttonBar.appendChild(downloadButton);
+                card.addEventListener('mouseenter', checkDynDownloadedHandler);
             }
         }
     }
@@ -844,7 +865,7 @@
     }
 
     function handleCard(card) {
-        // console.log('handleCard');
+        // console.log('handleCard', card);
         if (card.getElementsByClassName('bili-album').length > 0 || card.getElementsByClassName('bili-dyn-gallery').length > 0) {
             // console.log('add download button');
             card.getElementsByClassName('bili-album__preview__picture__img').forEach((img) => {
@@ -1593,7 +1614,7 @@
     let mutationCount = 0;
     new MutationObserver((mutationList, observer) => {
         for (const mutation of mutationList) {
-            // console.log(mutation);
+            // console.log('mutation: ', mutation);
             if (mutation.type === 'childList') {
                 // if (!['svg'].includes(mutation.target.tagName)) console.log(mutation.target);
                 /*for (const node of mutation.addedNodes) {
@@ -1603,13 +1624,13 @@
                     }
                 }*/
                 if (mutation.target.tagName === 'DIV' && ['bili-dyn-list__items', 'content'].includes(mutation.target.className)) {
-                    // console.log(mutation.addedNodes);
+                    // console.log('bili-dyn-list__items: ', mutation.addedNodes);
                     for (const node of mutation.addedNodes) {
                         // console.log(node);
                         handleCard(node);
                     }
                 } else if (mutation.target.tagName === 'DIV' && mutation.target.parentNode?.className === 'list-view topic-list__flow-list') {
-                    // vconsole.log(mutation.addedNodes);
+                    // console.log('topic-list__flow-list: ', mutation.addedNodes);
                     for (const node of mutation.addedNodes) {
                         // console.log(node);
                         handleCard(node);
@@ -1694,8 +1715,9 @@
                     if (contentDom) {
                         contentDom.scrollIntoView();
                         // console.log(contentDom);
+                        const alreadyDownloaded = checkDynDownloaded(contentDom);
                         const downloadButton = contentDom.querySelector('div.download-button span');
-                        if (downloadButton && ((downloadButton.textContent === '下载') || (!GM_getValue('listDownloadSkipAlreadyDownloaded', true) && (downloadButton.textContent === '已下载'))) && !(GM_getValue('listDownloadSkipReference', true) && contentDom.querySelector('div.reference'))) {
+                        if (downloadButton && ((!alreadyDownloaded) || (!GM_getValue('listDownloadSkipAlreadyDownloaded', true) && alreadyDownloaded)) && !(GM_getValue('listDownloadSkipReference', true) && contentDom.querySelector('div.reference'))) {
                             const opusCard = contentDom.querySelector('div.dyn-card-opus');
                             // console.log("opusCard: ", opusCard);
                             const videoCard = contentDom.querySelector('a.bili-dyn-card-video');
