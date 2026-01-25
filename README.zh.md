@@ -12,9 +12,9 @@ English Version: [README.md](README.md)
 
 ## 使用平台：
 （仅列出了我测试并使用的平台版本。）
-- **Tampermonkey** (测试于v5.1.0)
-- Firefox (测试于v115.9.1esr 64-bit)
-- Windows 7 SP1，Windows 11 23H2 (我测试用的版本)
+- **Tampermonkey** (测试于v5.4.1)
+- Firefox (测试于v147.0.1 64-bit)
+- Windows 10 22H2，Windows 11 23H2 (我测试用的版本)
 
 ## 安装方法:
 从[Greasy Fork](https://greasyfork.org/zh-CN/scripts/421885)直接安装。
