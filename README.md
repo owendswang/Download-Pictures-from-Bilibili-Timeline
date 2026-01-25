@@ -14,9 +14,9 @@ Or
 
 ## Platform:
 (Only listed those versions I tested. You could try it on other platforms by yourself.)
-- **Tampermonkey** (tested on v5.1.0)
-- Firefox (tested on v115.9.1esr 64-bit)
-- Windows 7 SP1, Windows 11 23H2 (which I tested on)
+- **Tampermonkey** (tested on v5.4.1)
+- Firefox (tested on v147.0.1 64-bit)
+- Windows 10 22H2, Windows 11 23H2 (which I tested on)
 
 ## Installation:
 Install from [Greasy Fork](https://greasyfork.org/zh-CN/scripts/421885).
