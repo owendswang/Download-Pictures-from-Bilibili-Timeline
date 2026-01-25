@@ -1,7 +1,8 @@
 **中文介绍：[README.zh.md](README.zh.md)**
 
 # Download Pictures and Videos from Bilibili Timeline
-A Tampermonkey script to download pictures from Bilibili timeline. Also able to download videos from timeline and play page, but only in 720P as a single MP4 file.
+A Tampermonkey script to download pictures from Bilibili timeline. Also able to download videos from timeline and play page.
+It could download Bilibili DASH video/audio streams in highest quality available and merges them into a single MP4 file **entirely in the browser** using ffmpeg.wasm.
 The filenames could be modified as you like in the settings pannel.
 Able to download from timeline one by one automatically.
 
@@ -41,3 +42,28 @@ Or Install manually:
 
 ## Special Thanks:
 [SocialSisterYi/bilibili-API-collect](https://github.com/SocialSisterYi/bilibili-API-collect)
+
+## Third-Party Licenses
+This project uses the following third-party libraries:
+
+### ffmpeg.wasm
+- Package: [@ffmpeg/ffmpeg](https://www.jsdelivr.com/package/npm/@ffmpeg/ffmpeg)
+- License: MIT
+- Repository: [ffmpegwasm/ffmpeg.wasm](https://github.com/ffmpegwasm/ffmpeg.wasm)
+
+### FFmpeg WebAssembly Core
+- Package: [@ffmpeg/core](https://www.jsdelivr.com/package/npm/@ffmpeg/core)
+- License: GPL-2.0-or-later
+- Description: WebAssembly build of the FFmpeg multimedia framework
+- Original Project: [https://ffmpeg.org/](https://ffmpeg.org/)
+
+The ffmpeg.wasm JavaScript wrapper is licensed under the MIT License.
+The FFmpeg WebAssembly core is derived from the FFmpeg C codebase and
+remains licensed under GPL-2.0-or-later, according to the upstream project.
+
+This userscript does **not modify** FFmpeg or its WebAssembly binaries;
+it only loads and invokes the upstream builds in the browser.
+
+## License
+This project is licensed under the MIT License.
+See the [LICENSE](LICENSE) file for details.
