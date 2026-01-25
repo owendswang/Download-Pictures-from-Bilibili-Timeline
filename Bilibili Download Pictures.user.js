@@ -1,9 +1,9 @@
 // ==UserScript==
 // @name         Bilibili Download Pictures and Videos
 // @name:zh-CN   下载Bilibili动态页面图片和视频
-// @version      1.2.0
+// @version      1.2.1
 // @description  Download pictures from bilibili timeline and highest-quality videos.
-// @description:zh-CN 下载“Bilibili动态”时间线页面的图片，也可下载最高质量视频。
+// @description:zh-CN 下载“Bilibili动态”时间线页面的图片，也可下载最高质量视频
 // @author       OWENDSWANG
 // @icon         https://avatars.githubusercontent.com/u/9076865?s=40&v=4
 // @license      MIT
@@ -1709,6 +1709,8 @@
                 inputVidName.disabled = false;
                 labelVidName.style.color = null;
                 inputVidName.style.borderColor = 'gray';
+                labelEnableDownloadDashVideo.style.color = null;
+                inputEnableDownloadDashVideo.disabled = false;
             } else {
                 // labelRetweetFileName.style.display = 'none';
                 // inputRetweetFileName.style.display = 'none';
@@ -1716,6 +1718,8 @@
                 inputVidName.disabled = true;
                 labelVidName.style.color = 'gray';
                 inputVidName.style.borderColor = 'lightgray';
+                labelEnableDownloadDashVideo.style.color = 'gray';
+                inputEnableDownloadDashVideo.disabled = true;
             }
         });
 
