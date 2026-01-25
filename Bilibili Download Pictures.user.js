@@ -967,7 +967,7 @@
                     }*/
                 });
                 card.addEventListener('mouseenter', checkDynDownloadedHandler);
-            } else if(GM_getValue('enableVideoDownload', false) && card.getElementsByClassName('bili-tabs__nav__items').length > 0) {
+            } else if(GM_getValue('enableVideoDownload', true) && card.getElementsByClassName('bili-tabs__nav__items').length > 0) {
                 // console.log('add video dynamic download button');
                 const buttonBar = card.getElementsByClassName('bili-tabs__nav__items')[0];
                 let downloadButton = document.createElement('div');
@@ -1057,7 +1057,7 @@
 
     function handleOpusCard(card) {
         // console.log('handleOpusCard');
-         if (card.getElementsByClassName('bili-album').length > 0 || card.getElementsByClassName('horizontal-scroll-album').length > 0 || (GM_getValue('enableVideoDownload', false) && card.getElementsByClassName('bili-dyn-card-video').length > 0)) {
+         if (card.getElementsByClassName('bili-album').length > 0 || card.getElementsByClassName('horizontal-scroll-album').length > 0 || (GM_getValue('enableVideoDownload', true) && card.getElementsByClassName('bili-dyn-card-video').length > 0)) {
              addOpusDownloadButton(card);
          }
     }
@@ -1072,7 +1072,7 @@
                 });
             });
             addDownloadButton(card);
-        } else if (GM_getValue('enableVideoDownload', false) && card.getElementsByClassName('bili-dyn-card-video').length > 0 && card.getElementsByClassName('bili-dyn-action like disabled').length === 0) {
+        } else if (GM_getValue('enableVideoDownload', true) && card.getElementsByClassName('bili-dyn-card-video').length > 0 && card.getElementsByClassName('bili-dyn-action like disabled').length === 0) {
             addDownloadButton(card);
         }
     }
@@ -1132,7 +1132,7 @@
                     notLoaded = false;
                     // document.body.removeEventListener('mouseover', bodyMouseOver);
                 }
-            } /* else if (GM_getValue('enableVideoDownload', false) && document.body.querySelector('div.video-toolbar-left-main')) {
+            } /* else if (GM_getValue('enableVideoDownload', true) && document.body.querySelector('div.video-toolbar-left-main')) {
                 const buttonBar = document.body.querySelector('div.video-toolbar-left-main');
                 if (buttonBar) {
                     addPlayPageDownloadButton(buttonBar);
@@ -1237,7 +1237,7 @@
         inputVideoDownload.type = 'checkbox';
         inputVideoDownload.id = 'enableVideoDownload';
         inputVideoDownload.name = 'enableVideoDownload';
-        inputVideoDownload.checked = GM_getValue('enableVideoDownload', false);
+        inputVideoDownload.checked = GM_getValue('enableVideoDownload', true);
         question2.appendChild(inputVideoDownload);
         let videoDownloadExplain = document.createElement('p');
         videoDownloadExplain.textContent = '目前Bilibili视频单文件下载最高只支持720P MP4格式。';
@@ -1251,7 +1251,7 @@
         labelVidName.setAttribute('for', 'dlVidName');
         labelVidName.style.display = 'block';
         labelVidName.style.marginTop = '0.5rem';
-        labelVidName.style.color = GM_getValue('enableVideoDownload', false) ? null : 'gray';
+        labelVidName.style.color = GM_getValue('enableVideoDownload', true) ? null : 'gray';
         question2.appendChild(labelVidName);
         let inputVidName = document.createElement('input');
         inputVidName.type = 'text';
@@ -1263,8 +1263,8 @@
         inputVidName.style.borderStyle = 'solid';
         inputVidName.style.borderWidth = '0.14rem';
         inputVidName.style.borderRadius = '0.2rem';
-        inputVidName.disabled = GM_getValue('enableVideoDownload', false) ? false : true;
-        inputVidName.style.borderColor = GM_getValue('enableVideoDownload', false) ? 'gray' : 'lightgray';
+        inputVidName.disabled = GM_getValue('enableVideoDownload', true) ? false : true;
+        inputVidName.style.borderColor = GM_getValue('enableVideoDownload', true) ? 'gray' : 'lightgray';
         inputVidName.defaultValue = GM_getValue('dlVidName', '{username}-{title}-[{bvid}].{ext}');
         question2.appendChild(inputVidName);
         let vidNameExplain1 = document.createElement('p');
@@ -1777,7 +1777,7 @@
                 return;
             }*/
             let refreshFlag = false;
-            if (document.getElementById('enableVideoDownload').checked !== GM_getValue('enableVideoDownload', false)) {
+            if (document.getElementById('enableVideoDownload').checked !== GM_getValue('enableVideoDownload', true)) {
                 refreshFlag = true;
             }
             GM_setValue('dlPicName', document.getElementById('dlPicName').value);
@@ -1851,7 +1851,7 @@
                         // console.log(node);
                         handleCard(node);
                     }
-                } else if (GM_getValue('enableVideoDownload', false) && mutation.target.tagName === 'BODY') {
+                } else if (GM_getValue('enableVideoDownload', true) && mutation.target.tagName === 'BODY') {
                     for (const node of mutation.addedNodes) {
                         if (node.nodeType === 1 && node.tagName === 'DIV'/* && node.classList.contains('lt-row')*/) {
                             // console.log(mutation);
