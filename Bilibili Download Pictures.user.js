@@ -2,8 +2,8 @@
 // @name         Bilibili Download Pictures
 // @name:zh-CN   下载Bilibili动态页面图片
 // @version      1.2.0
-// @description  Download pictures from bilibili timeline and 720P videos.
-// @description:zh-CN 下载“Bilibili动态”时间线页面的图片，也可下载视频（720P单文件）
+// @description  Download pictures from bilibili timeline and highest-quality videos.
+// @description:zh-CN 下载“Bilibili动态”时间线页面的图片，也可下载最高质量视频。
 // @author       OWENDSWANG
 // @icon         https://avatars.githubusercontent.com/u/9076865?s=40&v=4
 // @license      MIT
