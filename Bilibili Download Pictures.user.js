@@ -1,6 +1,6 @@
 // ==UserScript==
-// @name         Bilibili Download Pictures
-// @name:zh-CN   下载Bilibili动态页面图片
+// @name         Bilibili Download Pictures and Videos
+// @name:zh-CN   下载Bilibili动态页面图片和视频
 // @version      1.2.0
 // @description  Download pictures from bilibili timeline and highest-quality videos.
 // @description:zh-CN 下载“Bilibili动态”时间线页面的图片，也可下载最高质量视频。
