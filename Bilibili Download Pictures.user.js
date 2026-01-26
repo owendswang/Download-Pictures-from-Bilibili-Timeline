@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Bilibili Download Pictures and Videos
 // @name:zh-CN   下载Bilibili动态页面图片和视频
-// @version      1.2.2
+// @version      1.2.3
 // @description  Download pictures from bilibili timeline and highest-quality videos.
 // @description:zh-CN 下载“Bilibili动态”时间线页面的图片，也可下载最高质量视频
 // @author       OWENDSWANG
@@ -641,12 +641,13 @@
         const id = crypto.randomUUID();
         await Promise.all([ffmpeg.writeFile(`v_${id}.m4s`, new Uint8Array(vidBuf)), ffmpeg.writeFile(`a_${id}.m4s`, new Uint8Array(audBuf))]);
         await ffmpeg.exec(['-i', `v_${id}.m4s`, '-i', `a_${id}.m4s`, '-c', 'copy', '-map', '0:v:0', '-map', '1:a:0', '-movflags', '+faststart', `out_${id}.mp4`]);
-        const out = await ffmpeg.readFile(`out_${id}.mp4`);
+        let out = await ffmpeg.readFile(`out_${id}.mp4`);
         await Promise.all([ffmpeg.deleteFile(`v_${id}.m4s`), ffmpeg.deleteFile(`a_${id}.m4s`), ffmpeg.deleteFile(`out_${id}.mp4`)]);
         // console.log(vidName);
         saveAs(new Blob([out.buffer], { type: 'video/mp4' }), vidName);
         progress.style.background = 'linear-gradient(to right, green 100%, transparent 100%)';
         progress.firstChild.textContent = progressName + ' [100%]';
+        out = null;
         setTimeout(() => {
             progress.remove();
             if(downloadQueueCard.childElementCount == 1) downloadQueueTitle.style.display = 'none';
