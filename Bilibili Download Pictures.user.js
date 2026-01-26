@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Bilibili Download Pictures and Videos
 // @name:zh-CN   下载Bilibili动态页面图片和视频
-// @version      1.2.1
+// @version      1.2.2
 // @description  Download pictures from bilibili timeline and highest-quality videos.
 // @description:zh-CN 下载“Bilibili动态”时间线页面的图片，也可下载最高质量视频
 // @author       OWENDSWANG
@@ -30,8 +30,8 @@
 // @grant        GM_registerMenuCommand
 // @require      https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js
 // @namespace https://greasyfork.org/users/738244
-// @downloadURL https://update.greasyfork.org/scripts/421885/Bilibili%20Download%20Pictures.user.js
-// @updateURL https://update.greasyfork.org/scripts/421885/Bilibili%20Download%20Pictures.meta.js
+// @downloadURL https://update.greasyfork.org/scripts/421885/Bilibili%20Download%20Pictures%20and%20Videos.user.js
+// @updateURL https://update.greasyfork.org/scripts/421885/Bilibili%20Download%20Pictures%20and%20Videos.meta.js
 // ==/UserScript==
 
 (async function() {
@@ -643,6 +643,7 @@
         await ffmpeg.exec(['-i', `v_${id}.m4s`, '-i', `a_${id}.m4s`, '-c', 'copy', '-map', '0:v:0', '-map', '1:a:0', '-movflags', '+faststart', `out_${id}.mp4`]);
         const out = await ffmpeg.readFile(`out_${id}.mp4`);
         await Promise.all([ffmpeg.deleteFile(`v_${id}.m4s`), ffmpeg.deleteFile(`a_${id}.m4s`), ffmpeg.deleteFile(`out_${id}.mp4`)]);
+        // console.log(vidName);
         saveAs(new Blob([out.buffer], { type: 'video/mp4' }), vidName);
         progress.style.background = 'linear-gradient(to right, green 100%, transparent 100%)';
         progress.firstChild.textContent = progressName + ' [100%]';
@@ -666,7 +667,7 @@
                 // console.log(audUrl);
                 // const videoTimeLength = vidRes.data.dash.duration; // in seconds;
                 // if (listDownloading && GM_getValue('listDownloadEnableSkipVidLength', false) && ((videoTimeLength) > GM_getValue('listDownloadSkipVidLength', 60))) return null;
-                const originalName = vidUrl.split('?')[0].split('/')[vidUrl.split('?')[0].split('/').length - 1];
+                const originalName = vidUrl.split('?')[0].split('/')[vidUrl.split('?')[0].split('/').length - 1].split('.')[0] + '.mp4';
                 const vidName = getVidName(GM_getValue('dlVidName', '{original}.{ext}'), originalName, data);
                 // console.log(vidName);
                 return await muxDashToMp4(vidUrl, audUrl, vidName);
@@ -1858,7 +1859,7 @@
                             const buttonBar = document.body.querySelector('div.video-toolbar-left-main');
                             mutationCount += 1;
                             // console.log(mutationCount);
-                            if (mutationCount === 9 && buttonBar && !buttonBar.querySelector('div.download-button')) {
+                            if (mutationCount === 6 && buttonBar && !buttonBar.querySelector('div.download-button')) {
                                 // console.log(mutation);
                                 addPlayPageDownloadButton(buttonBar);
                             }
