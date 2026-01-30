@@ -792,7 +792,7 @@
                 if (downloadButton) {
                     downloadButton.textContent = '无法下载';
                 }
-                return false;
+                return true;
             }
             if (!skipped) {
                 GM_setValue('blDl-' + dynId, true);
