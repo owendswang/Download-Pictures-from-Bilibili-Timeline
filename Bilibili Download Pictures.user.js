@@ -751,38 +751,48 @@
         try {
             let skipped;
             let dynRes = await getDynamicDetail(dynId);
-            // console.log(dynRes.data);
-            if (dynRes.data.card.desc.orig_dy_id) {
-                dynRes = await getDynamicDetail(dynRes.data.card.desc.orig_dy_id_str);
+            // console.log(dynRes.data.card.desc);
+            if (dynRes.data.card.desc != null) {
+                // console.log(dynRes.data);
+                if (dynRes.data.card.desc.orig_dy_id) {
+                    dynRes = await getDynamicDetail(dynRes.data.card.desc.orig_dy_id_str);
+                }
+                // console.log(dynRes.data);
+                switch(dynRes.data.card.desc.type) {
+                    case 1:
+                        // 转发
+                        break;
+                    case 2:
+                        // 图片
+                        // console.log('picture');
+                        skipped = await handleImageDynamic(dynRes.data);
+                        break;
+                    case 4:
+                        // 文字
+                        break;
+                    case 8:
+                        // 视频
+                        // console.log('video');
+                        skipped = await handleVideoDynamic(dynRes.data);
+                        break;
+                    case 64:
+                        // 专栏
+                        skipped = await handleArticleDynamic(dynRes.data);
+                        break;
+                    case 256:
+                        // 音频
+                        break;
+                    default:
+                        break;
+                }
             }
-            // console.log(dynRes.data);
-            const card = JSON.parse(dynRes.data.card.card);
-            switch(dynRes.data.card.desc.type) {
-                case 1:
-                    // 转发
-                    break;
-                case 2:
-                    // 图片
-                    // console.log('picture');
-                    skipped = await handleImageDynamic(dynRes.data);
-                    break;
-                case 4:
-                    // 文字
-                    break;
-                case 8:
-                    // 视频
-                    // console.log('video');
-                    skipped = await handleVideoDynamic(dynRes.data);
-                    break;
-                case 64:
-                    // 专栏
-                    skipped = await handleArticleDynamic(dynRes.data);
-                    break;
-                case 256:
-                    // 音频
-                    break;
-                default:
-                    break;
+            else {
+                console.log("Bilibili API returned null");
+                // GM_setValue('blDl-' + dynId, false);
+                if (downloadButton) {
+                    downloadButton.textContent = '无法下载';
+                }
+                return false;
             }
             if (!skipped) {
                 GM_setValue('blDl-' + dynId, true);
