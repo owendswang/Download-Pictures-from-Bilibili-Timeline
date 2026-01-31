@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Bilibili Download Pictures and Videos
 // @name:zh-CN   下载Bilibili动态页面图片和视频
-// @version      1.2.3
+// @version      1.2.4
 // @description  Download pictures from bilibili timeline and highest-quality videos.
 // @description:zh-CN 下载“Bilibili动态”时间线页面的图片，也可下载最高质量视频
 // @author       OWENDSWANG
@@ -752,49 +752,54 @@
             let skipped;
             let dynRes = await getDynamicDetail(dynId);
             // console.log(dynRes.data);
-            if (dynRes.data.card.desc.orig_dy_id) {
-                dynRes = await getDynamicDetail(dynRes.data.card.desc.orig_dy_id_str);
-            }
-            // console.log(dynRes.data);
-            const card = JSON.parse(dynRes.data.card.card);
-            switch(dynRes.data.card.desc.type) {
-                case 1:
-                    // 转发
-                    break;
-                case 2:
-                    // 图片
-                    // console.log('picture');
-                    skipped = await handleImageDynamic(dynRes.data);
-                    break;
-                case 4:
-                    // 文字
-                    break;
-                case 8:
-                    // 视频
-                    // console.log('video');
-                    skipped = await handleVideoDynamic(dynRes.data);
-                    break;
-                case 64:
-                    // 专栏
-                    skipped = await handleArticleDynamic(dynRes.data);
-                    break;
-                case 256:
-                    // 音频
-                    break;
-                default:
-                    break;
-            }
-            if (!skipped) {
-                GM_setValue('blDl-' + dynId, true);
-            }
-            if (downloadButton) {
-                if (!skipped) {
-                    downloadButton.textContent = '已下载';
-                } else {
-                    downloadButton.textContent = '下载';
+            if (dynRes.data.card.desc) {
+                if (dynRes.data.card.desc.orig_dy_id) {
+                    dynRes = await getDynamicDetail(dynRes.data.card.desc.orig_dy_id_str);
                 }
+                // console.log(dynRes.data);
+                const card = JSON.parse(dynRes.data.card.card);
+                switch(dynRes.data.card.desc.type) {
+                    case 1:
+                        // 转发
+                        break;
+                    case 2:
+                        // 图片
+                        // console.log('picture');
+                        skipped = await handleImageDynamic(dynRes.data);
+                        break;
+                    case 4:
+                        // 文字
+                        break;
+                    case 8:
+                        // 视频
+                        // console.log('video');
+                        skipped = await handleVideoDynamic(dynRes.data);
+                        break;
+                    case 64:
+                        // 专栏
+                        skipped = await handleArticleDynamic(dynRes.data);
+                        break;
+                    case 256:
+                        // 音频
+                        break;
+                    default:
+                        break;
+                }
+                if (!skipped) {
+                    GM_setValue('blDl-' + dynId, true);
+                }
+                if (downloadButton) {
+                    if (!skipped) {
+                        downloadButton.textContent = '已下载';
+                    } else {
+                        downloadButton.textContent = '下载';
+                    }
+                }
+                return true;
+            } else {
+                if (!listDownloading) alert('无法下载！');
+                return true;
             }
-            return true;
         } catch(e) {
             console.error(e);
             if (downloadButton) {
