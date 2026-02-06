@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Bilibili Download Pictures and Videos
 // @name:zh-CN   下载Bilibili动态页面图片和视频
-// @version      1.2.4
+// @version      1.2.5
 // @description  Download pictures from bilibili timeline and highest-quality videos.
 // @description:zh-CN 下载“Bilibili动态”时间线页面的图片，也可下载最高质量视频
 // @author       OWENDSWANG
@@ -323,7 +323,7 @@
         // console.log('downloadWrapper: ', url, name);
         downloadQueueTitle.style.display = 'block';
         const progress = downloadQueueCard.appendChild(progressBar.cloneNode(true));
-        const progressName = name.length > 17 ? (name.substring(0,17) + '...') : name;
+        const progressName = name.length > 20 ? (name.substring(0,20) + '...') : name;
         progress.firstChild.textContent = progressName + ' [0%]';
         if (url.startsWith('http://')) url = url.replace(/^http\:/, 'https:');
         return new Promise(function(resolve, reject) {
@@ -816,8 +816,6 @@
             const buttonBar = card.getElementsByClassName('bili-tabs__nav__items')[0];
             const pageDynId = (window.location.pathname.match(/BV[a-zA-Z0-9]{10}/)?.[0]) || (window.location.pathname.match(/^\/opus\/(\d+)$/)?.[1]) || (window.location.pathname.match(/^\/\d+$/)?.[0]);
             // console.log('pageDynId: ', pageDynId);
-            const cardOpusCard = card.querySelector('div.bili-dyn-item__main');
-            const videoCard = cardOpusCard.querySelector('a.bili-dyn-card-video');
             let downloadButton = document.createElement('div');
             downloadButton.textContent = GM_getValue('blDl-' + pageDynId, false) ? '已下载' : '下载';
             downloadButton.classList.add('bili-tabs__nav__item');
