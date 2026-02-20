@@ -61,6 +61,7 @@ FFmpeg WebAssembly 核心源自 FFmpeg 的 C 语言代码库，
 
 本用户脚本 **未对** FFmpeg 或其 WebAssembly 二进制文件进行任何修改；
 仅在浏览器中加载并调用上游提供的构建版本。
+FFmpeg WebAssembly 二进制文件从上游项目下载，并可能在本地缓存以提高性能。
 
 ## 许可证
 本项目采用 MIT 许可证发布。
