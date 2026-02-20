@@ -63,6 +63,8 @@ remains licensed under GPL-2.0-or-later, according to the upstream project.
 
 This userscript does **not modify** FFmpeg or its WebAssembly binaries;
 it only loads and invokes the upstream builds in the browser.
+The FFmpeg WebAssembly binaries are downloaded from upstream sources
+and may be cached locally for performance purposes.
 
 ## License
 This project is licensed under the MIT License.
