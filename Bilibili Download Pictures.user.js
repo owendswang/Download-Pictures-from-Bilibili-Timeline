@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Bilibili Download Pictures and Videos
 // @name:zh-CN   下载Bilibili动态页面图片和视频
-// @version      1.2.5
+// @version      1.2.6
 // @description  Download pictures from bilibili timeline and highest-quality videos.
 // @description:zh-CN 下载“Bilibili动态”时间线页面的图片，也可下载最高质量视频
 // @author       OWENDSWANG
@@ -14,6 +14,7 @@
 // @match        https://www.bilibili.com/opus/*
 // @match        https://www.bilibili.com/video/*
 // @match        https://www.bilibili.com/v/topic/detail/?*
+// @match        https://www.bilibili.com/bangumi/play/*
 // @connect      bilibili.com
 // @connect      bilivideo.com
 // @connect      bilivideo.cn
@@ -128,6 +129,8 @@
       for original FFmpeg licensing details.
     - This script does not modify upstream code; redistribution obligations are
       met by preserving these notices.
+    - The FFmpeg WebAssembly binaries are downloaded from upstream sources
+      and may be cached locally for performance purposes.
 */
     const { FFmpeg } = await import('https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.15/dist/esm/classes.js');
 
@@ -142,9 +145,25 @@
     let ffmpegInstance = null;
     let ffmpegInitializing = false;
 
-    async function toBlobURL(url, mime, progress, progressName, progressMin = 0, progressMax = 100) {
+    async function getCached(url, key, progress, progressName, progressMin = 0, progressMax = 100) {
+        const keyPath = '/' + key;
+        const CACHE_NAME = 'bilibili-download';
+        const cache = await caches.open(CACHE_NAME);
+        const cached = await cache.match(keyPath);
+        if (cached) {
+            const ab = await cached.arrayBuffer();
+            // console.log(ab);
+            return ab;
+        }
         const ab = await gmXMLHttpRequest(url, 'arraybuffer', progress, progressName, progressMin, progressMax);
-        if (!(ab instanceof ArrayBuffer)) { throw new Error('Error to download: ' + url); }
+        await cache.put(keyPath, new Response(ab));
+        return ab;
+    }
+
+    async function toBlobURL(url, key, mime, progress, progressName, progressMin = 0, progressMax = 100) {
+        const ab = await getCached(url, key, progress, progressName, progressMin, progressMax);
+        // console.log(ab);
+        if (!(ab instanceof ArrayBuffer) || ab.byteLength === 0) { throw new Error('Error to download: ' + url); }
         return URL.createObjectURL(new Blob([ab], { type: mime }));
     }
 
@@ -161,11 +180,11 @@
         // const FFmpeg = FFmpegWASM.FFmpeg;
         const ffmpeg = new FFmpeg();
         // ffmpeg.on('log', ({ message }) => console.log(message));
-        const coreURL = await toBlobURL(FFMPEG_CORE, 'text/javascript', progress, progressName, 0, 30);
+        const coreURL = await toBlobURL(FFMPEG_CORE, 'FFMPEG_CORE', 'text/javascript', progress, progressName, 0, 30);
         // console.log('coreURL: ', coreURL);
         progress.style.background = 'linear-gradient(to right, green 30%, transparent 30%)';
         progress.firstChild.textContent = progressName + ' [30%]';
-        const wasmURL = await toBlobURL(FFMPEG_WASM, 'application/wasm', progress, progressName, 30, 60);
+        const wasmURL = await toBlobURL(FFMPEG_WASM, 'FFMPEG_WASM', 'application/wasm', progress, progressName, 30, 60);
         // console.log('wasmURL: ', wasmURL);
         progress.style.background = 'linear-gradient(to right, green 60%, transparent 60%)';
         progress.firstChild.textContent = progressName + ' [60%]';
@@ -225,7 +244,7 @@
                 },
                 onprogress: (e) => {
                     // e = { int done, finalUrl, bool lengthComputable, int loaded, int position, int readyState, response, str responseHeaders, responseText, responseXML, int status, statusText, int total, int totalSize }
-                    const percent = e.done / e.total * (progressMax - progressMin) + progressMin;
+                    const percent = e.done / e.total * (progressMax - progressMin) / 100 + progressMin;
                     progress.style.background = 'linear-gradient(to right, green ' + percent + '%, transparent ' + percent + '%)';
                     progress.firstChild.textContent = progressName + ' [' + percent.toFixed(0) + '%]';
                 },
@@ -2061,7 +2080,15 @@
         // console.log('Pathname changed:', window.location);
         showListDownloadButton();
     };
-
+/*
+    if ((window.location.host === 'www.bilibili.com') && window.location.pathname.match(/^\/bangumi\/play\/ep\d+/)) {
+        const buttonBar = document.body.querySelector('div.toolbar-left');
+        console.log(buttonBar);
+        if (!buttonBar.querySelector('div.download-button')) {
+            addPlayPageDownloadButton(buttonBar);
+        }
+    }
+*/
     addSettingButton();
     addListDownloadButton();
     showListDownloadButton();
