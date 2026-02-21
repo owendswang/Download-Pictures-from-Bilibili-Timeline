@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Bilibili Download Pictures and Videos
 // @name:zh-CN   下载Bilibili动态页面图片和视频
-// @version      1.2.6
+// @version      1.2.7
 // @description  Download pictures from bilibili timeline and highest-quality videos.
 // @description:zh-CN 下载“Bilibili动态”时间线页面的图片，也可下载最高质量视频
 // @author       OWENDSWANG
@@ -150,7 +150,7 @@
         const CACHE_NAME = 'bilibili-download';
         const cache = await caches.open(CACHE_NAME);
         const cached = await cache.match(keyPath);
-        if (cached) {
+        if (cached && (cached.byteLength > 0)) {
             const ab = await cached.arrayBuffer();
             // console.log(ab);
             return ab;
@@ -161,6 +161,7 @@
     }
 
     async function toBlobURL(url, key, mime, progress, progressName, progressMin = 0, progressMax = 100) {
+        // console.log(url, key, mime, progress, progressName, progressMin, progressMax);
         const ab = await getCached(url, key, progress, progressName, progressMin, progressMax);
         // console.log(ab);
         if (!(ab instanceof ArrayBuffer) || ab.byteLength === 0) { throw new Error('Error to download: ' + url); }
