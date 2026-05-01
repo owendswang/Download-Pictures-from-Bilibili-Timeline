@@ -67,5 +67,6 @@ The FFmpeg WebAssembly binaries are downloaded from upstream sources
 and may be cached locally for performance purposes.
 
 ## License
-This project is licensed under the MIT License.
-See the [LICENSE](LICENSE) file for details.
+This repository, as distributed as a whole, is licensed under GPL-2.0 due to the inclusion of FFmpeg WebAssembly.
+Unless otherwise stated, the original code authored for this project is licensed under the MIT License.
+Third-party components retain their respective licenses.
