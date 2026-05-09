@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Bilibili Download Pictures and Videos
 // @name:zh-CN   下载Bilibili动态页面图片和视频
-// @version      1.2.8
+// @version      1.3.0
 // @description  Download pictures from bilibili timeline and highest-quality videos.
 // @description:zh-CN 下载“Bilibili动态”时间线页面的图片，也可下载最高质量视频
 // @author       OWENDSWANG
@@ -13,7 +13,7 @@
 // @match        https://space.bilibili.com/*/dynamic*
 // @match        https://www.bilibili.com/opus/*
 // @match        https://www.bilibili.com/video/*
-// @match        https://www.bilibili.com/v/topic/detail/?*
+// @match        https://www.bilibili.com/v/topic/detail?*
 // @match        https://www.bilibili.com/bangumi/play/*
 // @connect      bilibili.com
 // @connect      bilivideo.com
@@ -481,7 +481,14 @@
         });
     }*/
 
-    function getPicName(nameSetting, originalName, index, data) {
+    function parseDurationTextToSeconds(durationText) {
+        const [minutes, seconds] = durationText.split(':').map(Number);
+        return minutes * 60 + seconds;
+    }
+
+    // For 'https://api.vc.bilibili.com/dynamic_svr/v1/dynamic_svr/get_dynamic_detail?dynamic_id=' + dynId
+    // But it has deprecated
+    /*function getPicName(nameSetting, originalName, index, data) {
         const card = JSON.parse(data.card.card);
         // console.log(card);
         let setName = nameSetting;
@@ -511,29 +518,63 @@
         setName = setName.replace('{HH}', HH);
         setName = setName.replace('{mm}', mm);
         setName = setName.replace('{ss}', ss);
-        /*if (retweetPostId && GM_getValue('retweetMode', false)) {
-            setName = setName.replace('{re.mblogid}', retweetPostId);
-            setName = setName.replace('{re.username}', retweetUserName);
-            setName = setName.replace('{re.userid}', retweetUserId);
-            setName = setName.replace('{re.uid}', retweetPostUid);
-            setName = setName.replace('{re.content}', retweetContent.substring(0, 25));
-            let reYYYY, reMM, reDD, reHH, remm, ress;
-            const retweetPostAt = new Date(retweetPostTime);
-            if (retweetPostTime) {
-                reYYYY = retweetPostAt.getFullYear().toString();
-                reMM = (retweetPostAt.getMonth() + 1).toString().padStart(2, '0');
-                reDD = retweetPostAt.getDate().toString().padStart(2, '0');
-                reHH = retweetPostAt.getHours().toString().padStart(2, '0');
-                remm = retweetPostAt.getMinutes().toString().padStart(2, '0');
-                ress = retweetPostAt.getSeconds().toString().padStart(2, '0');
-            }
-            setName = setName.replace('{re.YYYY}', reYYYY);
-            setName = setName.replace('{re.MM}', reMM);
-            setName = setName.replace('{re.DD}', reDD);
-            setName = setName.replace('{re.HH}', reHH);
-            setName = setName.replace('{re.mm}', remm);
-            setName = setName.replace('{re.ss}', ress);
-        }*/
+        //if (retweetPostId && GM_getValue('retweetMode', false)) {
+        //    setName = setName.replace('{re.mblogid}', retweetPostId);
+        //    setName = setName.replace('{re.username}', retweetUserName);
+        //    setName = setName.replace('{re.userid}', retweetUserId);
+        //    setName = setName.replace('{re.uid}', retweetPostUid);
+        //    setName = setName.replace('{re.content}', retweetContent.substring(0, 25));
+        //    let reYYYY, reMM, reDD, reHH, remm, ress;
+        //    const retweetPostAt = new Date(retweetPostTime);
+        //    if (retweetPostTime) {
+        //        reYYYY = retweetPostAt.getFullYear().toString();
+        //        reMM = (retweetPostAt.getMonth() + 1).toString().padStart(2, '0');
+        //        reDD = retweetPostAt.getDate().toString().padStart(2, '0');
+        //        reHH = retweetPostAt.getHours().toString().padStart(2, '0');
+        //        remm = retweetPostAt.getMinutes().toString().padStart(2, '0');
+        //        ress = retweetPostAt.getSeconds().toString().padStart(2, '0');
+        //    }
+        //    setName = setName.replace('{re.YYYY}', reYYYY);
+        //    setName = setName.replace('{re.MM}', reMM);
+        //    setName = setName.replace('{re.DD}', reDD);
+        //    setName = setName.replace('{re.HH}', reHH);
+        //    setName = setName.replace('{re.mm}', remm);
+        //    setName = setName.replace('{re.ss}', ress);
+        //}
+        return setName.replace(/[<|>|*|"|\/|\\|\||:|?|\n]/g, '_');
+    }*/
+
+    function getPicName(nameSetting, originalName, index, item) {
+        const author = item.modules.module_author;
+        const dynamic = item.modules.module_dynamic;
+        // console.log(card);
+        let setName = nameSetting;
+        setName = setName.replace('{original}', originalName.split('.')[0]);
+        setName = setName.replace('{ext}', originalName.split('.')[1]);
+        const userName = author.name;
+        const userId = author.mid;
+        const dynamicId = item.id_str;
+        const content = dynamic.major.opus.summary.text || '';
+        // console.log("content: ", content);
+        setName = setName.replace('{username}', userName);
+        setName = setName.replace('{userid}', userId);
+        setName = setName.replace('{dynamicid}', dynamicId);
+        setName = setName.replace('{index}', index);
+        setName = setName.replace('{content}', content.substring(0, 25));
+        let YYYY, MM, DD, HH, mm, ss;
+        const postAt = new Date(author.pub_ts * 1000);
+        YYYY = postAt.getFullYear().toString();
+        MM = (postAt.getMonth() + 1).toString().padStart(2, '0');
+        DD = postAt.getDate().toString().padStart(2, '0');
+        HH = postAt.getHours().toString().padStart(2, '0');
+        mm = postAt.getMinutes().toString().padStart(2, '0');
+        ss = postAt.getSeconds().toString().padStart(2, '0');
+        setName = setName.replace('{YYYY}', YYYY);
+        setName = setName.replace('{MM}', MM);
+        setName = setName.replace('{DD}', DD);
+        setName = setName.replace('{HH}', HH);
+        setName = setName.replace('{mm}', mm);
+        setName = setName.replace('{ss}', ss);
         return setName.replace(/[<|>|*|"|\/|\\|\||:|?|\n]/g, '_');
     }
 
@@ -572,7 +613,9 @@
         return setName.replace(/[<|>|*|"|\/|\\|\||:|?|\n]/g, '_');
     }
 
-    async function handleImageDynamic(data) {
+    // For 'https://api.vc.bilibili.com/dynamic_svr/v1/dynamic_svr/get_dynamic_detail?dynamic_id=' + dynId
+    // But it has deprecated
+    /*async function handleImageDynamic(data) {
         const card = JSON.parse(data.card.card);
         const pictures = card.item.pictures;
         // console.log(pictures);
@@ -582,18 +625,34 @@
                 const pictureUrl = picture.img_src;
                 const originalName = pictureUrl.split('/')[pictureUrl.split('/').length - 1];
                 const pictureName = getPicName(GM_getValue('dlPicName', '{original}.{ext}'), originalName, index + 1, data);
-                /*GM_download({
-                    url: pictureUrl,
-                    name: pictureName,
-                    onerror: function(e) { console.log(e); alert('下载失败！'); },
-                    ontimeout: function(e) { console.log(e); alert('下载超时！'); },
-                });*/
+                //GM_download({
+                //    url: pictureUrl,
+                //    name: pictureName,
+                //    onerror: function(e) { console.log(e); alert('下载失败！'); },
+                //    ontimeout: function(e) { console.log(e); alert('下载超时！'); },
+                //});
+                return downloadWrapper(pictureUrl, pictureName);
+            }));
+        }
+    }*/
+
+    async function handleImageDynamic(item) {
+        const pictures = item.modules.module_dynamic.major.opus.pics || item.modules.module_dynamic.major.draw.items;
+        // console.log(pictures);
+        if (Array.isArray(pictures)) {
+            await Promise.all(pictures.map(function(picture, index) {
+                // console.log(picture);
+                const pictureUrl = picture.url || picture.src;
+                const originalName = pictureUrl.split('/')[pictureUrl.split('/').length - 1];
+                const pictureName = getPicName(GM_getValue('dlPicName', '{original}.{ext}'), originalName, index + 1, item);
                 return downloadWrapper(pictureUrl, pictureName);
             }));
         }
     }
 
-    async function handleArticleDynamic(data) {
+    // For 'https://api.vc.bilibili.com/dynamic_svr/v1/dynamic_svr/get_dynamic_detail?dynamic_id=' + dynId
+    // But it has deprecated
+    /*async function handleArticleDynamic(data) {
         const card = JSON.parse(data.card.card);
         const pictures = card.image_urls;
         // console.log(pictures);
@@ -603,16 +662,16 @@
                 const pictureUrl = picture;
                 const originalName = pictureUrl.split('/')[pictureUrl.split('/').length - 1];
                 const pictureName = getPicName(GM_getValue('dlPicName', '{original}.{ext}'), originalName, index + 1, data);
-                /*GM_download({
-                    url: pictureUrl,
-                    name: pictureName,
-                    onerror: function(e) { console.log(e); alert('下载失败！'); },
-                    ontimeout: function(e) { console.log(e); alert('下载超时！'); },
-                });*/
+                //GM_download({
+                //    url: pictureUrl,
+                //    name: pictureName,
+                //    onerror: function(e) { console.log(e); alert('下载失败！'); },
+                //    ontimeout: function(e) { console.log(e); alert('下载超时！'); },
+                //});
                 return downloadWrapper(pictureUrl, pictureName);
             }));
         }
-    }
+    }*/
 
     function getVideoInfo(bvid) {
         // console.log('getVideoInfo');
@@ -727,7 +786,9 @@
         }
     }
 
-    async function handleVideoDynamic(data) {
+    // For 'https://api.vc.bilibili.com/dynamic_svr/v1/dynamic_svr/get_dynamic_detail?dynamic_id=' + dynId
+    // But it has deprecated.
+    /*async function handleVideoDynamic(data) {
         // console.log('handleVideoDynamic');
         // console.log(data);
         const card = JSON.parse(data.card.card);
@@ -744,13 +805,25 @@
         }
         const bvid = data.card.desc.bvid;
         await handleVideoDownload(bvid);
+    }*/
+
+    async function handleVideoDynamic(data) {
+        // console.log('handleVideoDynamic');
+        // console.log(data);
+        const videoTimeLength = parseDurationTextToSeconds(data.duration_text);
+        if (listDownloading && GM_getValue('listDownloadEnableSkipVidLength', false) && (videoTimeLength > GM_getValue('listDownloadSkipVidLength', 60))) {
+            return true;
+        }
+        const bvid = data.bvid;
+        await handleVideoDownload(bvid);
     }
 
     function getDynamicDetail(dynId) {
         /*return new Promise(function(resolve, reject) {
             GM_xmlhttpRequest({
                 method: 'GET',
-                url: 'https://api.vc.bilibili.com/dynamic_svr/v1/dynamic_svr/get_dynamic_detail?dynamic_id=' + dynId,
+                // url: 'https://api.vc.bilibili.com/dynamic_svr/v1/dynamic_svr/get_dynamic_detail?dynamic_id=' + dynId,
+                url: 'https://api.bilibili.com/x/polymer/web-dynamic/v1/detail?id=' + dynId,
                 responseType: 'json',
                 onload: function({ response }) {
                     // console.log(response);
@@ -761,11 +834,13 @@
                 ontimeout: function(e) { resolve(null); },
             });
         });*/
-        return oXMLHttpRequest('https://api.vc.bilibili.com/dynamic_svr/v1/dynamic_svr/get_dynamic_detail?dynamic_id=' + dynId, 'json');
-        // return oXMLHttpRequest('https://api.bilibili.com/x/polymer/web-dynamic/v1/detail?id=' + dynId, 'json');
+        // return oXMLHttpRequest('https://api.vc.bilibili.com/dynamic_svr/v1/dynamic_svr/get_dynamic_detail?dynamic_id=' + dynId, 'json');
+        return oXMLHttpRequest('https://api.bilibili.com/x/polymer/web-dynamic/v1/detail?id=' + dynId + '&features=itemOpusStyle,opusBigCover,onlyfansVote,endFooterHidden,decorationCard,onlyfansAssetsV2,ugcDelete,onlyfansQaCard,editable,opusPrivateVisible,avatarAutoTheme,sunflowerStyle,cardsEnhance,eva3CardOpus,eva3CardVideo,eva3CardComment,eva3CardVote,eva3CardUser', 'json');
     }
 
-    async function handleDynamicDownload(dynId, downloadButton) {
+    // For 'https://api.vc.bilibili.com/dynamic_svr/v1/dynamic_svr/get_dynamic_detail?dynamic_id=' + dynId
+    // But it has deprecated.
+    /*async function handleDynamicDownload(dynId, downloadButton) {
         if (downloadButton) {
             downloadButton.textContent = '下载中……';
         }
@@ -822,6 +897,57 @@
                 if (!listDownloading) alert('无法下载！');
                 return true;
             }
+        } catch(e) {
+            console.error(e);
+            if (downloadButton) {
+                downloadButton.textContent = GM_getValue('blDl-' + dynId, false) ? '已下载' : '下载';
+            }
+            if (!listDownloading) alert('无法下载！');
+            return false;
+        }
+    }*/
+
+    // For 'https://api.bilibili.com/x/polymer/web-dynamic/v1/detail?id=' + dynId
+    async function handleDynamicDownload(dynId, downloadButton) {
+        if (downloadButton) {
+            downloadButton.textContent = '下载中……';
+        }
+        // console.log('handleDynamicDownload: ' + dynId);
+        try {
+            let skipped;
+            let dynRes = await getDynamicDetail(dynId);
+            // console.log(dynRes.data);
+            let item = dynRes.data.item;
+            if (item.orig) {
+                item = item.orig;
+            }
+            // console.log(item);
+            const major = item.modules.module_dynamic.major;
+            if (major.archive) {
+                // 视频
+                // console.log('video');
+                skipped = await handleVideoDynamic(major.archive);
+            } else if (major.draw || major.opus) {
+                // 图片
+                // console.log('picture');
+                skipped = await handleImageDynamic(item);
+            } else {
+                // major.live_rcmd // 直播
+                // major.
+                if (!listDownloading) alert('无法下载！');
+                return true;
+            }
+            if (!skipped) {
+                GM_setValue('blDl-' + dynId, true);
+            }
+            if (downloadButton) {
+                if (!skipped) {
+                    downloadButton.textContent = '已下载';
+                } else {
+                    downloadButton.textContent = '下载';
+                }
+            }
+            return true;
         } catch(e) {
             console.error(e);
             if (downloadButton) {
@@ -1084,7 +1210,7 @@
 
     function handleOpusCard(card) {
         // console.log('handleOpusCard');
-         if (card.getElementsByClassName('bili-album').length > 0 || card.getElementsByClassName('horizontal-scroll-album').length > 0 || (GM_getValue('enableVideoDownload', true) && card.getElementsByClassName('bili-dyn-card-video').length > 0)) {
+         if (card.getElementsByClassName('bili-album').length > 0 || card.getElementsByClassName('horizontal-scroll-album').length > 0 || card.getElementsByClassName('opus-module-top__album__cover').length > 0 || (GM_getValue('enableVideoDownload', true) && card.getElementsByClassName('bili-dyn-card-video').length > 0)) {
              addOpusDownloadButton(card);
          }
     }
